@@ -8,6 +8,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+
+/* ================= WAJIB UPLOAD BUKTI ================= */
+if (empty($_FILES['bukti']['name'])) {
+    $_SESSION['error'] = 'Silakan upload bukti transfer terlebih dahulu';
+    header("Location: checkout.php");
+    exit;
+}
+
 $pembeli_id = intval($_SESSION['user_id']);
 $userQ = mysqli_query($conn, "
     SELECT nama, alamat 
@@ -59,10 +67,53 @@ if (!$items) {
     exit;
 }
 
+/* ================= BUKTI TRANSFER ================= */
+$status = 'pending';
+$bukti  = null;
+
+if (
+    !isset($_FILES['bukti']) ||
+    $_FILES['bukti']['error'] !== UPLOAD_ERR_OK
+) {
+    $_SESSION['error'] = 'Upload bukti gagal. Silakan ulangi.';
+    header("Location: checkout.php");
+    exit;
+}
+
+/* VALIDASI MIME TYPE (LEBIH AMAN DARI EXTENSION) */
+$finfo = finfo_open(FILEINFO_MIME_TYPE);
+$mime  = finfo_file($finfo, $_FILES['bukti']['tmp_name']);
+finfo_close($finfo);
+
+$allowedMime = [
+    'image/jpeg' => 'jpg',
+    'image/png'  => 'png'
+];
+
+if (!isset($allowedMime[$mime])) {
+    $_SESSION['error'] = 'Format bukti harus JPG atau PNG';
+    header("Location: checkout.php");
+    exit;
+}
+
+$ext = $allowedMime[$mime];
+
+$bukti = 'bukti_' . time() . '_' . $pembeli_id . '.' . $ext;
+
+move_uploaded_file(
+    $_FILES['bukti']['tmp_name'],
+    '../uploads/bukti/' . $bukti
+);
+
+$status = 'menunggu_verifikasi';
+
+
 /* ================= SIMPAN TRANSAKSI ================= */
 mysqli_query($conn, "
-    INSERT INTO transaksi (pembeli_id, bank, no_rekening, no_telepon, total, status)
-    VALUES ($pembeli_id, '$bank', '$no_rekening', '$no_telepon', $total, 'menunggu_verifikasi')
+    INSERT INTO transaksi 
+    (pembeli_id, bank, no_rekening, no_telepon, total, bukti_transfer, status)
+    VALUES 
+    ($pembeli_id, '$bank', '$no_rekening', '$no_telepon', $total, ".($bukti ? "'$bukti'" : "NULL").", '$status')
 ");
 
 $transaksi_id = mysqli_insert_id($conn);

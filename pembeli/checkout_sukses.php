@@ -1,28 +1,92 @@
 <?php
 session_start();
+include '../config/koneksi.php';
 
-if (!isset($_SESSION['user_id']) || $_SESSION['user']['role'] !== 'pembeli') {
-    header("Location: ../login.php");
-    exit;
+/* ================= MODE PENJUAL (via transaksi_id) ================= */
+$transaksi_id = intval($_GET['transaksi_id'] ?? 0);
+
+if ($transaksi_id > 0) {
+
+    // ambil transaksi
+    $q = mysqli_query($conn, "
+        SELECT 
+            t.id,
+            t.total,
+            t.status,
+            t.created_at,
+            u.nama,
+            u.alamat,
+            t.no_telepon
+        FROM transaksi t
+        JOIN users u ON t.pembeli_id = u.id
+        WHERE t.id = $transaksi_id
+    ");
+
+    $transaksi = mysqli_fetch_assoc($q);
+    if (!$transaksi) {
+        die('Transaksi tidak ditemukan');
+    }
+
+    // ambil detail produk
+    $qDetail = mysqli_query($conn, "
+        SELECT 
+            d.qty,
+            d.harga,
+            p.nama_produk
+        FROM transaksi_detail d
+        JOIN produk p ON d.produk_id = p.id
+        WHERE d.transaksi_id = $transaksi_id
+    ");
+
+    $items = [];
+    while ($d = mysqli_fetch_assoc($qDetail)) {
+        $items[] = $d;
+    }
+
+    // bikin format invoice AGAR SAMA
+    $invoice = [
+        'kode'    => 'INV-' . date('Ymd', strtotime($transaksi['created_at'])) . '-' . $transaksi_id,
+        'tanggal' => date('d M Y H:i', strtotime($transaksi['created_at'])),
+        'status'  => ucfirst($transaksi['status']),
+        'total'   => $transaksi['total'],
+        'alamat'  => [
+            'nama'   => $transaksi['nama'],
+            'telp'   => $transaksi['no_telepon'],
+            'alamat' => $transaksi['alamat'],
+            'kota'   => '',
+            'provinsi' => ''
+        ],
+        'items' => $items
+    ];
+
 }
+/* ================= MODE PEMBELI (SESSION) ================= */
+else {
 
-if (!isset($_SESSION['invoice'])) {
-    header("Location: dashboard.php");
-    exit;
+    if (!isset($_SESSION['user_id']) || $_SESSION['user']['role'] !== 'pembeli') {
+        header("Location: ../login.php");
+        exit;
+    }
+
+    if (!isset($_SESSION['invoice'])) {
+        header("Location: dashboard.php");
+        exit;
+    }
+
+    $invoice = $_SESSION['invoice'];
+    $alamat = $invoice['alamat'];
+
 }
-
-$invoice = $_SESSION['invoice'];
-
+/* 🔒 WAJIB DILETAKKAN DI SINI */
 $alamat = $invoice['alamat'] ?? [
-    'nama' => '-',
-    'telp' => '-',
-    'alamat' => 'Alamat belum tersedia',
-    'kota' => '',
-    'provinsi' => ''
+    'nama'      => '-',
+    'telp'      => '-',
+    'alamat'    => 'Alamat belum tersedia',
+    'kota'      => '',
+    'provinsi'  => ''
 ];
-
-
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -133,9 +197,18 @@ $alamat = $invoice['alamat'] ?? [
     <!-- BUTTON -->
     <div class="mt-4 flex flex-col gap-2 no-print">
 
-        <a href="dashboard.php" class="bg-teal-600 text-white py-2 rounded text-center font-bold">
-            Kembali ke Dashboard
-        </a>
+       <?php if (isset($_SESSION['user']['role']) && $_SESSION['user']['role'] === 'penjual'): ?>
+    <a href="../penjual/dashboard.php"
+       class="bg-teal-600 text-white py-2 rounded text-center font-bold">
+        Kembali ke Dashboard Penjual
+    </a>
+<?php else: ?>
+    <a href="dashboard.php"
+       class="bg-teal-600 text-white py-2 rounded text-center font-bold">
+        Kembali ke Dashboard
+    </a>
+<?php endif; ?>
+
        <a href="cetak_invoice.php" target="_blank"
    class="border py-2 rounded text-center font-bold">
     📄 Download / Cetak PDF

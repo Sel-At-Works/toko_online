@@ -94,6 +94,13 @@ if (count($items) === 0) {
             💳 Informasi Pembayaran
         </h2>
 
+        <?php if (!empty($_SESSION['error'])): ?>
+    <div class="bg-red-100 text-red-700 p-3 rounded-xl mb-4 text-sm">
+        <?= $_SESSION['error']; ?>
+    </div>
+<?php unset($_SESSION['error']); endif; ?>
+
+
         <form action="checkout_proses.php" method="POST" enctype="multipart/form-data" class="space-y-4">
 
             <!-- BANK -->

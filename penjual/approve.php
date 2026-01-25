@@ -2,30 +2,76 @@
 session_start();
 include '../config/koneksi.php';
 
-// ambil transaksi yang perlu di-approve
+/* ================= CEK LOGIN PENJUAL ================= */
+if (!isset($_SESSION['user_id']) || $_SESSION['user']['role'] !== 'penjual') {
+    header("Location: ../login.php");
+    exit;
+}
+
+/* ================= ID PENJUAL ================= */
+$penjual_id = intval($_SESSION['user_id']);
+
+
+/* ================= SEARCH ================= */
+$q = mysqli_real_escape_string($conn, $_GET['q'] ?? '');
+$search = '';
+
+if ($q !== '') {
+    $search = " AND (
+        t.no_rekening = '$q' OR
+        t.resi = '$q'
+    )";
+}
+
+/* ================= AMBIL TRANSAKSI ================= */
 $query = mysqli_query($conn, "
-    SELECT 
+    SELECT DISTINCT
         t.id,
         t.total,
         t.bank,
+        t.no_rekening,
         t.bukti_transfer,
         t.status,
+        t.resi,
         t.created_at,
-
         u.nama AS nama_pembeli,
         u.alamat,
         t.no_telepon
-
-
     FROM transaksi t
+    JOIN transaksi_detail d ON t.id = d.transaksi_id
+    JOIN produk p ON d.produk_id = p.id
     JOIN users u ON t.pembeli_id = u.id
+    WHERE p.penjual_id = $penjual_id
+    $search
     ORDER BY t.created_at DESC
 ");
+
+
 /* ================= PROSES APPROVE / TOLAK ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'], $_POST['id'])) {
+
     $id   = intval($_POST['id']);
     $aksi = $_POST['aksi'];
 
+    /* ===== SIMPAN RESI ===== */
+    if ($aksi === 'resi' && !empty($_POST['resi'])) {
+
+        $resi = mysqli_real_escape_string($conn, trim($_POST['resi']));
+
+        mysqli_query($conn, "
+            UPDATE transaksi t
+            JOIN transaksi_detail d ON t.id = d.transaksi_id
+            JOIN produk p ON d.produk_id = p.id
+            SET t.resi = '$resi'
+            WHERE t.id = $id
+            AND p.penjual_id = $penjual_id
+        ");
+
+        header("Location: approve.php");
+        exit;
+    }
+
+    /* ===== APPROVE / TOLAK ===== */
     if ($aksi === 'approve') {
         $status = 'selesai';
     } elseif ($aksi === 'tolak') {
@@ -36,26 +82,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'], $_POST['id'])
 
     if ($status) {
         mysqli_query($conn, "
-            UPDATE transaksi 
-            SET status = '$status'
-            WHERE id = $id
+            UPDATE transaksi t
+            JOIN transaksi_detail d ON t.id = d.transaksi_id
+            JOIN produk p ON d.produk_id = p.id
+            SET t.status = '$status'
+            WHERE t.id = $id
+            AND p.penjual_id = $penjual_id
         ");
     }
 
-    // refresh halaman supaya data update
     header("Location: approve.php");
     exit;
 }
-$warna = match($row['status']) {
-    'menunggu_verifikasi' => 'text-orange-600',
-    'selesai' => 'text-green-600',
-    'ditolak' => 'text-red-600',
-    default => 'text-gray-600'
-};
-?>
-<span class="font-semibold <?= $warna ?>">
-    <?= ucfirst($row['status']) ?>
-</span>
 
 ?>
 
@@ -86,17 +124,18 @@ $warna = match($row['status']) {
         <!-- ===== TOP BAR ===== -->
         <div class="flex items-center gap-4 mb-6">
 
-            <!-- SEARCH -->
-            <div class="flex-1 relative">
-                <input
-                    type="text"
-                    placeholder="Search Here"
-                    class="w-full px-12 py-3 rounded-full bg-white shadow focus:outline-none"
-                />
-                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                    🔍
-                </span>
-            </div>
+            <form method="get" class="flex-1 relative">
+    <input
+        type="text"
+        name="q"
+        value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
+        placeholder="Cari No Rekening / No Resi"
+        class="w-full px-12 py-3 rounded-full bg-white shadow focus:outline-none"
+    />
+    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+        🔍
+    </span>
+</form>
 
             <!-- PROFIL & NOTIFICATION -->
             <?php include '../layouts/profil_notifikasi.php'; ?>
@@ -128,24 +167,64 @@ $warna = match($row['status']) {
 
 <tbody>
 <?php while ($row = mysqli_fetch_assoc($query)): ?>
+
+<?php
+$detailQ = mysqli_query($conn, "
+    SELECT 
+        d.qty,
+        d.harga,
+        p.nama_produk,
+        p.gambar
+    FROM transaksi_detail d
+    JOIN produk p ON d.produk_id = p.id
+    WHERE d.transaksi_id = {$row['id']}
+");
+?>
+
 <tr class="border-t hover:bg-gray-50">
 
+    <!-- KODE -->
     <td class="px-4 py-3">TRX<?= $row['id'] ?></td>
 
-    <td class="px-4 py-3">-</td>
+    <!-- JUDUL PRODUK -->
+    <td class="px-4 py-3">
+        <?php while ($d = mysqli_fetch_assoc($detailQ)): ?>
+            <div><?= $d['nama_produk'] ?></div>
+        <?php endwhile; ?>
+    </td>
 
-    <td class="px-4 py-3 text-center">-</td>
+    <?php mysqli_data_seek($detailQ, 0); ?>
 
+    <!-- QTY -->
+    <td class="px-4 py-3 text-center">
+        <?php while ($d = mysqli_fetch_assoc($detailQ)): ?>
+            <div><?= $d['qty'] ?></div>
+        <?php endwhile; ?>
+    </td>
+
+    <?php mysqli_data_seek($detailQ, 0); ?>
+
+    <!-- BUKTI TRANSFER -->
     <td class="px-4 py-3 text-center">
         <?php if ($row['bukti_transfer']): ?>
-            <img src="../uploads/<?= $row['bukti_transfer'] ?>" class="w-12 mx-auto">
+            <img src="../uploads/bukti/<?= $row['bukti_transfer'] ?>" class="w-12 mx-auto">
         <?php else: ?>
             -
         <?php endif; ?>
     </td>
 
-    <td class="px-4 py-3"><?= strtoupper($row['bank'] ?? '-') ?></td>
+    <!-- BANK -->
+   <td class="px-4 py-3 text-sm">
+    <div class="font-semibold">
+        <?= strtoupper($row['bank'] ?? '-') ?>
+    </div>
+    <div class="text-gray-600">
+        <?= $row['no_rekening'] ?? '-' ?>
+    </div>
+</td>
 
+
+    <!-- APPROVE -->
     <td class="px-4 py-3 text-center">
         <?php if ($row['status'] === 'menunggu_verifikasi'): ?>
             <form method="post" class="inline">
@@ -166,30 +245,74 @@ $warna = match($row['status']) {
         <?php endif; ?>
     </td>
 
-    <td class="px-4 py-3"><?= ucfirst($row['status']) ?></td>
-
-    <td class="px-4 py-3">-</td>
-
-      <!-- KOLOM ALAMAT -->
+    <!-- STATUS -->
     <td class="px-4 py-3">
         <?php
-        $alamat = trim($row['alamat'] ?? '');
-        echo $alamat !== '' ? $alamat : 'Alamat belum diisi';
+        $warna = match ($row['status']) {
+            'menunggu_verifikasi' => 'text-orange-600',
+            'selesai' => 'text-green-600',
+            'ditolak' => 'text-red-600',
+            default => 'text-gray-600'
+        };
         ?>
+        <span class="font-semibold <?= $warna ?>">
+            <?= ucfirst($row['status']) ?>
+        </span>
     </td>
 
+ <!-- RESI -->
+<td class="px-4 py-3 text-center">
+
+<?php if ($row['status'] === 'selesai' && empty($row['resi'])): ?>
+
+    <form method="post" class="flex gap-1 justify-center">
+        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+        <input type="text" name="resi"
+               placeholder="No Resi"
+               required
+               class="border px-2 py-1 text-xs rounded w-28">
+        <button name="aksi" value="resi"
+                class="px-2 py-1 bg-blue-500 text-white rounded text-xs">
+            Simpan
+        </button>
+    </form>
+
+<?php elseif (!empty($row['resi'])): ?>
+
+    <span class="text-green-600 font-semibold">
+        <?= htmlspecialchars($row['resi']) ?>
+    </span>
+
+<?php else: ?>
+    -
+<?php endif; ?>
+
+</td>
+
+
+    <!-- ALAMAT -->
+    <td class="px-4 py-3">
+        <?= trim($row['alamat'] ?? '') ?: 'Alamat belum diisi' ?>
+    </td>
+
+    <!-- PEMBELI -->
     <td class="px-4 py-3"><?= $row['nama_pembeli'] ?></td>
 
+    <!-- AKSI -->
     <td class="px-4 py-3">
-        <a href="detail_transaksi.php?id=<?= $row['id'] ?>"
-           class="px-3 py-1 bg-gray-500 text-white rounded text-xs">
-            Detail
-        </a>
+    <a href="../pembeli/checkout_sukses.php?transaksi_id=<?= $row['id'] ?>"
+   class="px-3 py-1 bg-gray-500 text-white rounded text-xs">
+    Detail
+</a>
+
+
     </td>
 
 </tr>
+
 <?php endwhile; ?>
 </tbody>
+
 
                 </table>
 
