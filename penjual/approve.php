@@ -52,24 +52,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aksi'], $_POST['id'])
 
     $id   = intval($_POST['id']);
     $aksi = $_POST['aksi'];
+    
+/* ===== SIMPAN RESI ===== */
+if ($aksi === 'resi' && !empty($_POST['resi'])) {
 
-    /* ===== SIMPAN RESI ===== */
-    if ($aksi === 'resi' && !empty($_POST['resi'])) {
+    $resi = mysqli_real_escape_string($conn, trim($_POST['resi']));
 
-        $resi = mysqli_real_escape_string($conn, trim($_POST['resi']));
+    mysqli_query($conn, "
+        UPDATE transaksi t
+        JOIN transaksi_detail d ON t.id = d.transaksi_id
+        JOIN produk p ON d.produk_id = p.id
+        SET 
+            t.resi = '$resi',
+            t.status = 'dikirim'
+        WHERE t.id = $id
+        AND p.penjual_id = $penjual_id
+    ");
 
-        mysqli_query($conn, "
-            UPDATE transaksi t
-            JOIN transaksi_detail d ON t.id = d.transaksi_id
-            JOIN produk p ON d.produk_id = p.id
-            SET t.resi = '$resi'
-            WHERE t.id = $id
-            AND p.penjual_id = $penjual_id
-        ");
+    header("Location: approve.php");
+    exit;
+}
 
-        header("Location: approve.php");
-        exit;
-    }
 
     /* ===== APPROVE / TOLAK ===== */
     if ($aksi === 'approve') {
