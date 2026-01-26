@@ -34,7 +34,7 @@ $user = $_SESSION['user'];
 
   <!-- USER INFO -->
  <!-- USER INFO -->
-<a href="/toko_online/profile.php"
+<a href="/profile.php"
    class="flex items-center gap-4 hover:opacity-80 transition">
 
   <div class="text-right">
@@ -46,7 +46,7 @@ $user = $_SESSION['user'];
     </p>
   </div>
 
-<img src="/toko_online/<?= !empty($user['foto']) 
+<img src="/<?= !empty($user['foto']) 
     ? $user['foto'] 
     : 'uploads/profile/default.png'; ?>"
     class="w-10 h-10 rounded-full object-cover border"

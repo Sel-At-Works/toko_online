@@ -63,8 +63,8 @@ $query = mysqli_query($conn, "
 
                     <?php
                     // FOTO
-                    $path_server = $_SERVER['DOCUMENT_ROOT'] . '/toko_online/' . $row['foto'];
-                    $path_url    = '/toko_online/' . $row['foto'];
+                    $path_server = $_SERVER['DOCUMENT_ROOT'] . '/' . $row['foto'];
+                    $path_url    = '/' . $row['foto'];
                     $ada_foto    = !empty($row['foto']) && file_exists($path_server);
                     ?>
 

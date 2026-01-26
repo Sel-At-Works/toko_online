@@ -10,7 +10,8 @@ if (!isset($_SESSION['user'])) {
 $user = $_SESSION['user'];
 
 /* ================== DASHBOARD SESUAI ROLE ================== */
-$baseUrl = '/toko_online/';
+$baseUrl = '/';
+
 
 switch ($user['role']) {
     case 'super_admin':
