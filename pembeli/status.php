@@ -136,18 +136,19 @@ $query = mysqli_query($conn, "
 
                                 <!-- STATUS -->
                                 <td class="px-4 py-3">
-                                    <?php if ($row['status'] === 'ditolak'): ?>
-                                        <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 font-semibold">
-                                            Ditolak
-                                        </span>
-                                        <div class="text-xs text-red-600 mt-1">
-                                            Silahkan datang ke toko
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 font-semibold">
-                                            <?= ucfirst($row['status']) ?>
-                                        </span>
-                                    <?php endif; ?>
+                                  <?php if ($row['status'] === 'refund'): ?>
+    <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 font-semibold">
+        Refund
+    </span>
+    <div class="text-xs text-red-600 mt-1">
+        Silahkan datang ke toko
+    </div>
+<?php else: ?>
+    <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 font-semibold">
+        <?= ucfirst(str_replace('_', ' ', $row['status'])) ?>
+    </span>
+<?php endif; ?>
+
                                 </td>
 
 

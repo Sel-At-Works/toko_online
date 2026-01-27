@@ -50,8 +50,38 @@ mysqli_query($conn, "
 if ($user['role_id'] == 1) {
     header("Location: super_admin/dashboard.php");
 } elseif ($user['role_id'] == 2) {
+
+    $uid = $user['id'];
+
+    // cek data penjual
+    $cek = mysqli_query($conn, "
+        SELECT bank, no_rekening, qris
+        FROM penjual_profile
+        WHERE user_id = $uid
+        LIMIT 1
+    ");
+
+    // belum ada profil sama sekali
+    if (mysqli_num_rows($cek) === 0) {
+        header("Location: penjual/lengkapi_profil_penjual.php");
+        exit;
+    }
+
+    $profil = mysqli_fetch_assoc($cek);
+
+    // data WAJIB
+    if (
+        empty($profil['bank']) ||
+        empty($profil['no_rekening'])
+    ) {
+        header("Location: penjual/lengkapi_profil_penjual.php");
+        exit;
+    }
+
+    // sudah lengkap
     header("Location: penjual/dashboard.php");
-} elseif ($user['role_id'] == 3) {
+}
+ elseif ($user['role_id'] == 3) {
     header("Location: ./pembeli/dashboard.php");
 } else {
     header("Location: login.php");

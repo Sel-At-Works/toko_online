@@ -7,12 +7,30 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-$id     = $_SESSION['user']['id'];
-$nama   = $_POST['nama'];
-$email  = $_POST['email'];
-$alamat = $_POST['alamat'];
+$id   = (int) $_SESSION['user']['id'];
+$role = $_SESSION['user']['role'];
 
-$fotoPath = $_SESSION['user']['foto']; // default foto lama
+$nama   = mysqli_real_escape_string($conn, $_POST['nama']);
+$email  = mysqli_real_escape_string($conn, $_POST['email']);
+$alamat = mysqli_real_escape_string($conn, $_POST['alamat'] ?? '');
+
+$fotoPath = $_SESSION['user']['foto'] ?? 'uploads/profile/default.png';
+
+/* ================= NO TELEPON ================= */
+if ($role === 'pembeli') {
+    $no_telepon = preg_replace('/[^0-9]/', '', $_POST['no_telepon']);
+
+    if (strlen($no_telepon) < 10 || strlen($no_telepon) > 13) {
+        die('Nomor telepon tidak valid');
+    }
+
+    // UPDATE (BUKAN INSERT)
+    mysqli_query($conn, "
+        UPDATE pembeli_profile
+        SET no_telepon = '$no_telepon'
+        WHERE user_id = $id
+    ");
+}
 
 /* ================= UPLOAD FOTO ================= */
 if (!empty($_FILES['foto']['name'])) {
@@ -22,7 +40,7 @@ if (!empty($_FILES['foto']['name'])) {
         mkdir($folder, 0777, true);
     }
 
-    $ext  = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
+    $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
     $namaFile = 'user_' . $id . '_' . time() . '.' . $ext;
     $target = $folder . $namaFile;
 
@@ -31,22 +49,21 @@ if (!empty($_FILES['foto']['name'])) {
     }
 }
 
-/* ================= UPDATE DATABASE ================= */
-$query = "UPDATE users SET 
-            nama='$nama',
-            email='$email',
-            alamat='$alamat',
-            foto='$fotoPath'
-          WHERE id='$id'";
+/* ================= UPDATE USERS ================= */
+mysqli_query($conn, "
+    UPDATE users SET 
+        nama   = '$nama',
+        email  = '$email',
+        alamat = '$alamat',
+        foto   = '$fotoPath'
+    WHERE id = $id
+");
 
-mysqli_query($conn, $query);
-
-/* ================= UPDATE SESSION (INI WAJIB) ================= */
+/* ================= UPDATE SESSION ================= */
 $_SESSION['user']['nama']   = $nama;
 $_SESSION['user']['email']  = $email;
 $_SESSION['user']['alamat'] = $alamat;
 $_SESSION['user']['foto']   = $fotoPath;
 
-/* ================= REDIRECT ================= */
 header("Location: profile.php");
 exit;

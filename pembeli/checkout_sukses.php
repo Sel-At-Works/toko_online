@@ -2,76 +2,66 @@
 session_start();
 include '../config/koneksi.php';
 
-/* ================= MODE PENJUAL (via transaksi_id) ================= */
 $transaksi_id = intval($_GET['transaksi_id'] ?? 0);
 
-if ($transaksi_id > 0) {
-
-    // ambil transaksi
-    $q = mysqli_query($conn, "
-        SELECT 
-            t.id,
-            t.total,
-            t.status,
-            t.created_at,
-            u.nama,
-            u.alamat,
-            t.no_telepon
-        FROM transaksi t
-        JOIN users u ON t.pembeli_id = u.id
-        WHERE t.id = $transaksi_id
-    ");
-
-    $transaksi = mysqli_fetch_assoc($q);
-    if (!$transaksi) {
-        die('Transaksi tidak ditemukan');
-    }
-
-    // ambil detail produk
-    $qDetail = mysqli_query($conn, "
-        SELECT 
-            d.qty,
-            d.harga,
-            p.nama_produk
-        FROM transaksi_detail d
-        JOIN produk p ON d.produk_id = p.id
-        WHERE d.transaksi_id = $transaksi_id
-    ");
-
-    $items = [];
-    while ($d = mysqli_fetch_assoc($qDetail)) {
-        $items[] = $d;
-    }
-
-    // bikin format invoice AGAR SAMA
-    $invoice = [
-        'kode'    => 'INV-' . date('Ymd', strtotime($transaksi['created_at'])) . '-' . $transaksi_id,
-        'tanggal' => date('d M Y H:i', strtotime($transaksi['created_at'])),
-        'status'  => ucfirst($transaksi['status']),
-        'total'   => $transaksi['total'],
-        'alamat'  => [
-            'nama'   => $transaksi['nama'],
-            'telp'   => $transaksi['no_telepon'],
-            'alamat' => $transaksi['alamat'],
-            'kota'   => '',
-            'provinsi' => ''
-        ],
-        'items' => $items
-    ];
-}
-/* ================= MODE PEMBELI (SESSION) ================= */
 if ($transaksi_id <= 0) {
     die('Transaksi tidak valid');
 }
 
-/* 🔒 WAJIB DILETAKKAN DI SINI */
-$alamat = $invoice['alamat'] ?? [
-    'nama'      => '-',
-    'telp'      => '-',
-    'alamat'    => 'Alamat belum tersedia',
-    'kota'      => '',
-    'provinsi'  => ''
+/* === AMBIL TRANSAKSI === */
+$q = mysqli_query($conn, "
+    SELECT 
+        t.id,
+        t.total,
+        t.status,
+        t.created_at,
+        u.nama,
+        u.alamat,
+        t.no_telepon
+    FROM transaksi t
+    JOIN users u ON t.pembeli_id = u.id
+    WHERE t.id = $transaksi_id
+");
+
+$transaksi = mysqli_fetch_assoc($q);
+
+if (!$transaksi) {
+    die('Transaksi tidak ditemukan');
+}
+
+/* === DETAIL PRODUK === */
+$qDetail = mysqli_query($conn, "
+    SELECT 
+        d.qty,
+        d.harga,
+        p.nama_produk
+    FROM transaksi_detail d
+    JOIN produk p ON d.produk_id = p.id
+    WHERE d.transaksi_id = $transaksi_id
+");
+
+$items = [];
+while ($d = mysqli_fetch_assoc($qDetail)) {
+    $items[] = $d;
+}
+
+/* === INVOICE === */
+$invoice = [
+    'kode'    => 'INV-' . date('Ymd', strtotime($transaksi['created_at'])) . '-' . $transaksi_id,
+    'tanggal' => date('d M Y H:i', strtotime($transaksi['created_at'])),
+    'status'  => ucfirst($transaksi['status']),
+    'total'   => $transaksi['total'],
+    'alamat'  => [
+        'nama'   => $transaksi['nama'],
+        'telp'   => $transaksi['no_telepon'],
+        'alamat' => $transaksi['alamat'],
+        'kota'   => '',
+        'provinsi' => ''
+    ],
+    'items' => $items
 ];
+
+$alamat = $invoice['alamat'];
 ?>
 
 <!DOCTYPE html>
@@ -138,7 +128,7 @@ $alamat = $invoice['alamat'] ?? [
                     'menunggu_verifikasi' => 'bg-orange-100 text-orange-700',
                     'dikirim' => 'bg-blue-100 text-blue-700',
                     'selesai' => 'bg-green-100 text-green-700',
-                    'ditolak' => 'bg-red-100 text-red-700',
+                    'refund' => 'bg-red-100 text-red-700',
                     default => 'bg-gray-100 text-gray-700'
                 };
                 ?>
