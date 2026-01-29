@@ -15,23 +15,29 @@ $q = mysqli_real_escape_string($conn, $_GET['q'] ?? '');
 $search = '';
 
 if ($q !== '') {
-    $search = " AND t.resi LIKE '%$q%'";
+    // search berdasarkan kode invoice (INV-YYYYMMDD-ID) atau nomor resi di transaksi_penjual
+    $search = " AND (
+        CONCAT('INV-', DATE_FORMAT(t.created_at, '%Y%m%d'), '-', t.id) LIKE '%$q%'
+        OR EXISTS (
+            SELECT 1
+            FROM transaksi_penjual tp
+            WHERE tp.transaksi_id = t.id
+            AND tp.resi LIKE '%$q%'
+        )
+    )";
 }
-
 
 
 /* ================= AMBIL TRANSAKSI PEMBELI ================= */
 $query = mysqli_query($conn, "
-    SELECT
-        t.id,
-        t.total,
-        t.bank,
-        t.no_rekening,
-        t.status,
-        t.resi,
-        t.created_at
+    SELECT t.*
     FROM transaksi t
     WHERE t.pembeli_id = $pembeli_id
+    AND EXISTS (
+        SELECT 1 
+        FROM transaksi_penjual tp 
+        WHERE tp.transaksi_id = t.id
+    )
     $search
     ORDER BY t.created_at DESC
 ");
@@ -61,11 +67,12 @@ $query = mysqli_query($conn, "
                 <!-- SEARCH -->
                 <form method="get" class="flex-1 relative">
                     <input
-                        type="text"
-                        name="q"
-                        value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
-                        placeholder="Cari No Resi"
-                        class="w-full px-12 py-3 rounded-full bg-white shadow focus:outline-none" />
+    type="text"
+    name="q"
+    value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
+    placeholder="Cari Kode atau Resi"
+    class="w-full px-12 py-3 rounded-full bg-white shadow focus:outline-none" />
+
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                         🔍
                     </span>
@@ -98,20 +105,29 @@ $query = mysqli_query($conn, "
                         <?php while ($row = mysqli_fetch_assoc($query)): ?>
 
                             <?php
-                            $detailQ = mysqli_query($conn, "
-                SELECT d.qty, p.nama_produk
-                FROM transaksi_detail d
-                JOIN produk p ON d.produk_id = p.id
-                WHERE d.transaksi_id = {$row['id']}
-            ");
+                            $kode = 'INV-' . date('Ymd', strtotime($row['created_at'])) . '-' . $row['id'];
+                      $detailQ = mysqli_query($conn, "
+    SELECT d.qty, p.nama_produk
+    FROM transaksi_detail d
+    JOIN produk p ON d.produk_id = p.id
+    WHERE d.transaksi_id = {$row['id']}
+      AND EXISTS (
+          SELECT 1 
+          FROM transaksi_penjual tp
+          WHERE tp.transaksi_id = d.transaksi_id
+            AND tp.penjual_id = p.penjual_id
+      )
+");
+
                             ?>
 
                             <tr class="border-t hover:bg-gray-50">
 
                                 <!-- KODE -->
                                 <td class="px-4 py-3 font-semibold">
-                                    TRX<?= $row['id'] ?>
+                                    <?= $kode ?>
                                 </td>
+
 
                                 <!-- PRODUK -->
                                 <td class="px-4 py-3">
@@ -136,26 +152,80 @@ $query = mysqli_query($conn, "
 
                                 <!-- STATUS -->
                                 <td class="px-4 py-3">
-                                  <?php if ($row['status'] === 'refund'): ?>
-    <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700 font-semibold">
-        Refund
-    </span>
+<?php
+// ambil semua status penjual untuk transaksi ini
+$tpStatusQ = mysqli_query($conn, "
+    SELECT status
+    FROM transaksi_penjual
+    WHERE transaksi_id = {$row['id']}
+");
+$allStatuses = [];
+while ($s = mysqli_fetch_assoc($tpStatusQ)) {
+    $allStatuses[] = $s['status'];
+}
+
+// tentukan status global
+if (in_array('dikirim', $allStatuses) && !in_array('menunggu_verifikasi', $allStatuses) && !in_array('refund', $allStatuses)) {
+    $status_global = 'dikirim';
+} elseif (in_array('refund', $allStatuses) && !in_array('dikirim', $allStatuses) && !in_array('menunggu_verifikasi', $allStatuses)) {
+    $status_global = 'refund';
+} elseif (in_array('dikirim', $allStatuses) && in_array('refund', $allStatuses)) {
+    $status_global = 'sebagian_dikirim';
+} else {
+    $status_global = 'menunggu_verifikasi';
+}
+
+// tampilkan badge
+$badge = match ($status_global) {
+    'menunggu_verifikasi' => 'bg-orange-100 text-orange-700',
+    'dikirim' => 'bg-blue-100 text-blue-700',
+    'sebagian_dikirim' => 'bg-yellow-100 text-yellow-700',
+    'selesai' => 'bg-green-100 text-green-700',
+    'refund' => 'bg-red-100 text-red-700',
+    default => 'bg-gray-100 text-gray-700'
+};
+?>
+<span class="px-2 py-1 text-xs rounded-full font-semibold <?= $badge ?>">
+    <?= ucfirst(str_replace('_', ' ', $status_global)) ?>
+</span>
+
+<?php if ($status_global === 'refund'): ?>
     <div class="text-xs text-red-600 mt-1">
         Silahkan datang ke toko
     </div>
-<?php else: ?>
-    <span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700 font-semibold">
-        <?= ucfirst(str_replace('_', ' ', $row['status'])) ?>
-    </span>
 <?php endif; ?>
-
-                                </td>
+</td>
 
 
                                 <!-- RESI -->
                                 <td class="px-4 py-3">
-                                    <?= $row['resi'] ?: '-' ?>
-                                </td>
+<?php
+$tpResi = mysqli_query($conn, "
+    SELECT 
+        u.nama AS nama_penjual,
+        MAX(tp.resi) AS resi
+    FROM transaksi_penjual tp
+    JOIN produk p ON p.penjual_id = tp.penjual_id
+    JOIN users u ON p.penjual_id = u.id
+    JOIN transaksi_detail d ON d.produk_id = p.id AND d.transaksi_id = tp.transaksi_id
+    WHERE tp.transaksi_id = {$row['id']}
+    GROUP BY tp.penjual_id, u.nama
+");
+if (mysqli_num_rows($tpResi) > 0):
+    while ($r = mysqli_fetch_assoc($tpResi)):
+?>
+    <div class="text-xs">
+        <strong><?= $r['nama_penjual'] ?>:</strong>
+        <?= $r['resi'] ?: '-' ?>
+    </div>
+<?php
+    endwhile;
+else:
+    echo '-';
+endif;
+?>
+</td>
+
 
                                 <!-- TANGGAL -->
                                 <td class="px-4 py-3 text-xs text-gray-500">
