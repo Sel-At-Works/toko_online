@@ -157,8 +157,9 @@ $gambar = $row['gambar']
         Rp <?= number_format($row['harga']) ?>
     </p>
 
-    <!-- AKSI -->
-   <div class="flex justify-center gap-2 mt-5">
+
+<!-- AKSI -->
+<div class="flex justify-center gap-2 mt-5 flex-wrap">
 
     <a href="detail_produk.php?id=<?= $row['id'] ?>"
        class="flex items-center gap-1
@@ -169,19 +170,20 @@ $gambar = $row['gambar']
     </a>
 
     <?php if ($row['stok'] > 0) { ?>
-    <a href="keranjang_tambah.php?id=<?= $row['id'] ?>"
-   onclick="return confirm('Tambah produk ke keranjang?')"
-   class="flex items-center gap-1
-          px-3 py-1.5 text-xs font-semibold
-          rounded-full bg-teal-500 text-white
-          hover:bg-teal-600 transition">
-    🛒 Keranjang
-</a>
-
+        <a href="keranjang_tambah.php?id=<?= $row['id'] ?>"
+           onclick="return confirm('Tambah produk ke keranjang?')"
+           class="flex items-center gap-1
+                  px-3 py-1.5 text-xs font-semibold
+                  rounded-full bg-teal-500 text-white
+                  hover:bg-teal-600 transition">
+            🛒 Keranjang
+        </a>
     <?php } ?>
 
+    <!-- 💬 CHAT PENJUAL -->
+   <a href="../chat_app.php?lawan_id=<?= $row['penjual_id'] ?>"
+   class="...">💬 Chat</a>
 </div>
-
 
 </div>
 

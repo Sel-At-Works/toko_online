@@ -12,8 +12,9 @@ $user = $_SESSION['user'];
 <!-- NOTIFICATION + PROFILE -->
 <div class="flex items-center gap-6 bg-white px-6 py-3 rounded-xl shadow">
 
-  <!-- NOTIFICATION ICON -->
-  <div class="relative cursor-pointer">
+<!-- NOTIFICATION ICON (DROPDOWN) -->
+<div class="relative">
+  <button id="notifBtn" class="relative focus:outline-none">
     <svg xmlns="http://www.w3.org/2000/svg"
          class="w-6 h-6 text-gray-600 hover:text-teal-600 transition"
          fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -30,7 +31,63 @@ $user = $_SESSION['user'];
                  w-4 h-4 flex items-center justify-center rounded-full">
       3
     </span>
+  </button>
+
+ <?php
+$role = $_SESSION['user']['role'] ?? '';
+?>
+
+<!-- DROPDOWN -->
+<div id="notifDropdown"
+     class="hidden absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-lg border z-50">
+
+  <div class="p-4 font-semibold border-b">Notifikasi</div>
+
+  <div class="max-h-60 overflow-y-auto">
+
+    <?php if ($role === 'pembeli') { ?>
+
+      <a href="/chat_app.php"
+         class="block p-4 text-sm hover:bg-gray-50">
+        💬 Pesan baru dari penjual
+      </a>
+
+      <a href="/pembeli/pesanan_saya.php"
+         class="block p-4 text-sm hover:bg-gray-50">
+        📦 Pesanan sedang diproses
+      </a>
+
+    <?php } elseif ($role === 'penjual') { ?>
+
+      <a href="/chat_app.php"
+         class="block p-4 text-sm hover:bg-gray-50">
+        💬 Pesan baru dari pembeli
+      </a>
+
+      <a href="/penjual/pesanan_masuk.php"
+         class="block p-4 text-sm hover:bg-gray-50">
+        📦 Pesanan baru masuk
+      </a>
+
+    <?php } else { ?>
+
+      <div class="p-4 text-sm text-gray-400 text-center">
+        Tidak ada notifikasi
+      </div>
+
+    <?php } ?>
+
   </div>
+
+  <a href="/notifikasi.php"
+     class="block text-center text-sm text-teal-600 py-2 hover:bg-gray-50 border-t">
+    Lihat semua
+  </a>
+
+</div>
+
+</div>
+
 
   <!-- USER INFO -->
  <!-- USER INFO -->
@@ -55,3 +112,16 @@ $user = $_SESSION['user'];
 
 </a>
 </div>
+<script>
+const notifBtn = document.getElementById('notifBtn');
+const notifDropdown = document.getElementById('notifDropdown');
+
+notifBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    notifDropdown.classList.toggle('hidden');
+});
+
+document.addEventListener('click', () => {
+    notifDropdown.classList.add('hidden');
+});
+</script>

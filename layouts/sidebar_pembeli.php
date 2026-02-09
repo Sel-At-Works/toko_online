@@ -3,7 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'pembeli') {
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'pembeli') {
     header("Location: ../login.php");
     exit;
 }
@@ -42,9 +42,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     Pesanan
 </a>
 
-
-
-
      <a href="keranjang.php"
    class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
    <?= $currentPage == 'keranjang.php'
@@ -62,17 +59,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     Status
 </a>
 
-
-
-      <a href=""
-   class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
-   <?= $currentPage == 'approve.php'
-      ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white shadow-lg scale-105'
-      : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600 active:scale-95' ?>">
-    Chat
-</a>
-
-
       <a href=""
    class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
    <?= $currentPage == 'laporan.php'
@@ -81,13 +67,14 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     laporan
 </a>
 
-    <a href=""
-   class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
-   <?= $currentPage == 'laporan.php'
-      ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white shadow-lg scale-105'
-      : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600 active:scale-95' ?>">
-    Chat
+  <a href="../chat_app.php"
+   class="block px-5 py-3 rounded-full font-semibold transition-all
+   <?= $currentPage == 'chat_list.php'
+      ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white'
+      : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600' ?>">
+   Chat
 </a>
+
 
 
 

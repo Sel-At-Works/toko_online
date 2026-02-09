@@ -2,10 +2,15 @@
 session_start();
 include '../config/koneksi.php'; // ⬅️ confiig koneksi
 
+$currentPage = basename($_SERVER['PHP_SELF']);
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] != 'penjual') {
   header("Location: ../login.php");
   exit;
 }
+
+// AMBIL ID USER
+$user_id = $_SESSION['user']['id']; 
 
 date_default_timezone_set('Asia/Jakarta');
 
@@ -184,24 +189,46 @@ $queryKategori = mysqli_query($conn, "
 
 
         <!-- PESANAN MASUK -->
-        <div class="bg-white rounded-2xl p-6 shadow space-y-4">
-          <h4 class="font-semibold">Pesanan Masuk</h4>
+      <div class="bg-white rounded-2xl p-6 shadow space-y-4">
+    <h4 class="font-semibold">Pesanan Masuk</h4>
 
-          <div class="bg-teal-100 rounded-xl p-4">
-            <p class="font-semibold">Sains (2)</p>
-            <p class="text-sm text-gray-500">andini</p>
-          </div>
+    <?php
+    $queryPesanan = mysqli_query($conn, "
+    SELECT 
+        tp.transaksi_id, 
+        t.total, 
+        t.created_at, 
+        t.pembeli_id,
+        u.nama AS nama_pembeli
+    FROM transaksi_penjual tp
+    JOIN transaksi t ON tp.transaksi_id = t.id
+    JOIN users u ON t.pembeli_id = u.id
+    WHERE tp.penjual_id = $user_id
+    ORDER BY t.created_at DESC
+");
+    if (mysqli_num_rows($queryPesanan) > 0):
+        while ($pesanan = mysqli_fetch_assoc($queryPesanan)):
+    ?>
+        <div class="bg-gray-100 rounded-xl p-4 flex justify-between items-center">
+            <div>
+                <p class="font-semibold"><?= htmlspecialchars($pesanan['nama_pembeli']) ?></p>
+                <p class="text-sm text-gray-500">Rp <?= number_format($pesanan['total'],0,',','.') ?></p>
+            </div>
+  <a href="../chat_app.php?lawan_id=<?= $pesanan['pembeli_id'] ?>&transaksi_id=<?= $pesanan['transaksi_id'] ?>"
+   class="px-3 py-1 bg-blue-500 text-white rounded text-xs">
+   Chat
+</a>
 
-          <div class="bg-gray-100 rounded-xl p-4">
-            <p class="font-semibold">IPAS (3)</p>
-            <p class="text-sm text-gray-500">Dara Herdiati</p>
-          </div>
 
-          <div class="bg-gray-100 rounded-xl p-4">
-            <p class="font-semibold">PHP (1)</p>
-            <p class="text-sm text-gray-500">Husni</p>
-          </div>
         </div>
+    <?php
+        endwhile;
+    else:
+    ?>
+        <p class="text-gray-500">Belum ada pesanan masuk</p>
+    <?php endif; ?>
+</div>
+
 
         <!-- MESSAGE -->
         <div class="bg-teal-500 text-white rounded-2xl p-6">
