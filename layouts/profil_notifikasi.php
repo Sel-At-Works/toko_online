@@ -23,7 +23,7 @@ WHERE penerima_id = '$user_id'
 AND dibaca = 0
     ");
   $notif_chat = mysqli_fetch_assoc($q)['total'];
-
+  
   // PESANAN
   $q = mysqli_query($conn, "
         SELECT COUNT(*) AS total
