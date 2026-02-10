@@ -24,12 +24,12 @@ if ($id > 0) {
         $produk_id = (int)$row['produk_id'];
         $qty       = (int)$row['qty'];
 
-        // 2️⃣ Kembalikan stok produk
-        mysqli_query($conn, "
-            UPDATE produk 
-            SET stok = stok + $qty 
-            WHERE id = $produk_id
-        ");
+        // // 2️⃣ Kembalikan stok produk
+        // mysqli_query($conn, "
+        //     UPDATE produk 
+        //     SET stok = stok + $qty 
+        //     WHERE id = $produk_id
+        // ");
 
         // 3️⃣ Hapus item dari keranjang
         mysqli_query($conn, "

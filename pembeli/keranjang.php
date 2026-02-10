@@ -30,24 +30,32 @@ if ($rowQty = mysqli_fetch_assoc($data)) {
     $qty = (int)$rowQty['qty'];
     $stok = (int)$rowQty['stok'];
     $produk_id = (int)$rowQty['produk_id'];
-
-    if ($aksi === 'tambah') {
-        if ($stok > 0) {
-            $qty++;
-            mysqli_query($conn, "
-                UPDATE produk SET stok = stok - 1 
-                WHERE id = $produk_id
-            ");
-        }
+if ($aksi === 'tambah') {
+    if ($qty < $stok) {
+        $qty++;
     }
+}
 
-    elseif ($aksi === 'kurang') {
-        $qty--;
-        mysqli_query($conn, "
-            UPDATE produk SET stok = stok + 1 
-            WHERE id = $produk_id
-        ");
-    }
+elseif ($aksi === 'kurang') {
+    $qty--;
+}
+
+// kalau qty <= 0 → hapus dari keranjang
+if ($qty <= 0) {
+    mysqli_query($conn, "
+        DELETE FROM keranjang
+        WHERE id = $keranjang_id
+          AND pembeli_id = $pembeli_id
+    ");
+} else {
+    mysqli_query($conn, "
+        UPDATE keranjang
+        SET qty = $qty
+        WHERE id = $keranjang_id
+          AND pembeli_id = $pembeli_id
+    ");
+}
+
 
     if ($qty <= 0) {
         mysqli_query($conn, "

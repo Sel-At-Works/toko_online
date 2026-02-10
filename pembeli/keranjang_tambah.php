@@ -45,12 +45,12 @@ if (mysqli_num_rows($cek) > 0) {
     ");
 }
 
-// 🔥 KURANGI STOK PRODUK
-mysqli_query($conn, "
-    UPDATE produk 
-    SET stok = stok - 1 
-    WHERE id = $produk_id
-");
+// // 🔥 KURANGI STOK PRODUK
+// mysqli_query($conn, "
+//     UPDATE produk 
+//     SET stok = stok - 1 
+//     WHERE id = $produk_id
+// ");
 
 header("Location: produk.php");
 exit;

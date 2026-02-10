@@ -43,7 +43,7 @@ mysqli_query($conn, "
 ");
 
 // LINK RESET
-$link = "http://localhost/toko_online/reset_password.php?token=$token";
+$link = "http://toko_online.test/reset_password.php?token=$token";
 
 // KIRIM EMAIL
 try {

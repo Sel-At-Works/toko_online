@@ -1,3 +1,22 @@
+<?php
+require_once __DIR__ . '/config/koneksi.php';
+
+if (!isset($_GET['token']) || empty($_GET['token'])) {
+    die('Token tidak valid.');
+}
+
+$token = $_GET['token'];
+
+$q = mysqli_query($conn, "
+    SELECT id FROM users
+    WHERE reset_token = '$token'
+    AND reset_expired > NOW()
+");
+
+if (mysqli_num_rows($q) === 0) {
+    die('Token reset password tidak valid atau sudah kedaluwarsa.');
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 
