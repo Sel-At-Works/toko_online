@@ -26,6 +26,17 @@ if ($q && mysqli_num_rows($q) > 0) {
     $profilPenjual = mysqli_fetch_assoc($q);
 }
 
+// PASTIKAN PROFIL ADA
+$cek = mysqli_query($conn, "
+    SELECT id FROM penjual_profile WHERE user_id = $uid LIMIT 1
+");
+
+if (mysqli_num_rows($cek) == 0) {
+  mysqli_query($conn, "
+   INSERT INTO penjual_profile (user_id, bank, no_rekening, qris)
+VALUES ($uid, '', '', NULL)
+");
+}
 
 /* ================= PROSES SIMPAN ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
