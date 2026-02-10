@@ -6,6 +6,10 @@ if (!isset($_SESSION['user'])) {
     header("Location: login.php");
     exit;
 }
+if (isset($_GET['lawan_id'])) {
+    $lawan_id = (int) $_GET['lawan_id'];
+    include $_SERVER['DOCUMENT_ROOT'].'/chat/mark_read.php';
+}
 
 /* ====== TENTUKAN DASHBOARD BERDASARKAN ROLE ====== */
 $dashboard = 'dashboard.php';
