@@ -51,7 +51,7 @@ $query = mysqli_query($conn, "
                         placeholder="Search Here"
                         class="px-4 py-2 rounded-full border focus:outline-none">
 
-                    <a href="tambah_penjual.php" class="text-3xl font-bold">+</a>
+                    <!-- <a href="tambah_penjual.php" class="text-3xl font-bold">+</a> -->
                 </div>
 
             </div>
@@ -108,7 +108,7 @@ $query = mysqli_query($conn, "
                         </div>
 
                         <!-- ACTION -->
-                        <div class="flex justify-center gap-5 mt-6">
+                        <!-- <div class="flex justify-center gap-5 mt-6">
 
                             <a href="edit_penjual.php?id=<?= $row['id'] ?>"
                                 class="p-2 rounded-full bg-white/20 hover:bg-yellow-400">✏️</a>
@@ -123,7 +123,7 @@ $query = mysqli_query($conn, "
                             </button>
 
 
-                        </div>
+                        </div> -->
 
                     </div>
 

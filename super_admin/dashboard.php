@@ -21,13 +21,13 @@ $user = $_SESSION['user'];
 
 <body class="bg-gray-100 font-sans">
 
-    <div class="flex min-h-screen">
+    <div class="flex h-screen overflow-hidden">
 
         <!-- SIDEBAR -->
         <?php include '../layouts/sidebar.php'; ?>
 
         <!-- MAIN CONTENT -->
-        <main class="flex-1 p-10">
+        <main class="flex-1 p-10 overflow-y-auto">
 
 <!-- TOP BAR -->
 <div class="flex justify-end mb-8">

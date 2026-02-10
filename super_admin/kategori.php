@@ -83,13 +83,14 @@ if (!$kategori) {
 
 <body class="bg-gray-100 font-sans">
 
-<div class="flex min-h-screen">
+<!-- mencegah body ikut scroll -->
+<div class="flex h-screen overflow-hidden">
 
 <!-- SIDEBAR -->
 <?php include '../layouts/sidebar.php'; ?>
 
 <!-- MAIN -->
-<main class="flex-1 p-8">
+<main class="flex-1 p-8 overflow-y-auto">
 
 <!-- TOP BAR -->
 <div class="flex items-center gap-4 mb-8">

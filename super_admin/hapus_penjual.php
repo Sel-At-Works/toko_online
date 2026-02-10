@@ -1,81 +1,51 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 session_start();
 include '../config/koneksi.php';
 
-// proteksi login
-if (!isset($_SESSION['user'])) {
-    header("Location: ../login.php");
+$id = $_GET['id'] ?? 0;
+$userLogin = $_SESSION['user_id'] ?? 0;
+
+// ambil data penjual
+$q = mysqli_query($conn, "
+    SELECT foto, status_login 
+    FROM users 
+    WHERE id='$id' AND role_id=2
+");
+
+$user = mysqli_fetch_assoc($q);
+
+// ❌ data tidak ditemukan
+if (!$user) {
+    echo 'NOT_FOUND';
     exit;
 }
 
-$id = $_GET['id'] ?? null;
-
-if (!$id) {
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'ID penjual tidak ditemukan'
-        });
-    </script>";
+// ❌ akun sendiri
+if ($id == $userLogin) {
+    echo 'SELF';
     exit;
 }
 
-// ambil data
-$get = mysqli_query($conn, "SELECT foto FROM users WHERE id='$id' AND role_id=2");
-
-if (!$get || mysqli_num_rows($get) == 0) {
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'Data penjual tidak ditemukan'
-        });
-    </script>";
+// ❌ sedang online
+if ($user['status_login'] === 'online') {
+    echo 'ONLINE';
     exit;
 }
 
-$data = mysqli_fetch_assoc($get);
+// =========================
+// ✅ BOLEH DIHAPUS
+// =========================
+mysqli_query($conn, "
+    DELETE FROM users 
+    WHERE id='$id' AND role_id=2
+");
 
-// hapus data
-$hapus = mysqli_query($conn, "DELETE FROM users WHERE id='$id' AND role_id=2");
-
-if ($hapus) {
-
-    // hapus foto jika ada
-    if (!empty($data['foto'])) {
-        $path = $_SERVER['DOCUMENT_ROOT'] . '/toko_online/' . $data['foto'];
-        if (file_exists($path)) {
-            unlink($path);
-        }
+// hapus foto jika ada
+if (!empty($user['foto'])) {
+    $path = $_SERVER['DOCUMENT_ROOT'] . '/toko_online/' . $user['foto'];
+    if (file_exists($path)) {
+        unlink($path);
     }
-
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'Data penjual berhasil dihapus',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    </script>";
-} else {
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'Query gagal dijalankan'
-        });
-    </script>";
 }
+
+echo 'OK';

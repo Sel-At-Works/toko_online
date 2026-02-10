@@ -2,6 +2,31 @@
 session_start();
 include '../config/koneksi.php';
 
+/* =========================
+   MODE AJAX (STATUS PENJUAL)
+========================= */
+if (isset($_GET['ajax']) && $_GET['ajax'] === 'status') {
+
+    $result = mysqli_query($conn, "
+        SELECT id, status_login 
+        FROM users 
+        WHERE role_id = 2
+    ");
+
+    $data = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $data[] = $row;
+    }
+
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit;
+}
+
+/* =========================
+   MODE NORMAL (HTML)
+========================= */
+
 // ambil data penjual
 $query = mysqli_query($conn, "
     SELECT * 
@@ -9,6 +34,7 @@ $query = mysqli_query($conn, "
     WHERE role_id = 2
 ");
 ?>
+
 
 <!DOCTYPE html>
 <html lang="id">
@@ -61,8 +87,8 @@ $query = mysqli_query($conn, "
                     <?php
                     // FOTO
                     $path_server = $_SERVER['DOCUMENT_ROOT'] . '/' . $row['foto'];
-$path_url    = '/' . $row['foto'];
-$ada_foto    = !empty($row['foto']) && file_exists($path_server);
+                    $path_url    = '/' . $row['foto'];
+                    $ada_foto    = !empty($row['foto']) && file_exists($path_server);
 
                     ?>
 
@@ -75,11 +101,12 @@ $ada_foto    = !empty($row['foto']) && file_exists($path_server);
                     <div id="penjual-<?= $row['id'] ?>"
                         class="penjual-card relative w-72 rounded-3xl p-6 text-white <?= $bgCard ?>">
 
-                        <!-- Status Login -->
-                        <span class="absolute top-4 right-4 text-xs px-3 py-1 rounded-full
-                        <?= $row['status_login'] === 'online' ? 'bg-green-800' : 'bg-red-800' ?>">
-                        <?= strtoupper($row['status_login']) ?>
+                        <span id="status-<?= $row['id'] ?>"
+                            class="absolute top-4 right-4 text-xs px-3 py-1 rounded-full
+                            <?= $row['status_login'] === 'online' ? 'bg-green-800' : 'bg-red-800' ?>">
+                            <?= strtoupper($row['status_login']) ?>
                         </span>
+
 
 
                         <!-- FOTO -->
@@ -114,11 +141,25 @@ $ada_foto    = !empty($row['foto']) && file_exists($path_server);
                             <a href="detail_penjual.php?id=<?= $row['id'] ?>"
                                 class="p-2 rounded-full bg-white/20 hover:bg-blue-400">👁️</a>
 
+                            <?php
+                            $disableHapus = (
+                                $row['status_login'] === 'online' ||
+                                $row['id'] == $_SESSION['user_id']
+                            );
+                            ?>
+
                             <button
-                                onclick="hapusPenjual(<?= $row['id'] ?>)"
-                                class="p-2 rounded-full bg-white/20 hover:bg-red-500">
+                        data-id="<?= $row['id'] ?>"
+                        class="btn-hapus p-2 rounded-full
+                         <?= $disableHapus
+                        ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                        : 'bg-white/20 hover:bg-red-500' ?>"
+                                <?= $disableHapus ? 'disabled' : '' ?>>
                                 🗑️
                             </button>
+
+
+
 
 
                         </div>
@@ -140,6 +181,17 @@ $ada_foto    = !empty($row['foto']) && file_exists($path_server);
 
 <script>
     function hapusPenjual(id) {
+
+        // CEGAH HAPUS AKUN SENDIRI
+        if (id == <?= json_encode($_SESSION['user_id']) ?>) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Aksi ditolak',
+                text: 'Anda tidak bisa menghapus akun yang sedang digunakan'
+            });
+            return;
+        }
+
         Swal.fire({
             title: 'Yakin?',
             text: 'Data penjual akan dihapus permanen',
@@ -152,7 +204,26 @@ $ada_foto    = !empty($row['foto']) && file_exists($path_server);
 
                 fetch('hapus_penjual.php?id=' + id)
                     .then(res => res.text())
-                    .then(() => {
+                    .then(res => {
+
+                        if (res === 'ONLINE') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: 'Penjual sedang online'
+                            });
+                            return;
+                        }
+
+                        if (res === 'SELF') {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: 'Tidak bisa menghapus akun sendiri'
+                            });
+                            return;
+                        }
+
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil',
@@ -161,7 +232,6 @@ $ada_foto    = !empty($row['foto']) && file_exists($path_server);
                             showConfirmButton: false
                         });
 
-                        // hilangkan card / row
                         document.getElementById('penjual-' + id)?.remove();
                     });
             }
@@ -185,4 +255,58 @@ $ada_foto    = !empty($row['foto']) && file_exists($path_server);
             }
         });
     });
+
+  function updateStatusPenjual() {
+    fetch('?ajax=status')
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(user => {
+                const card  = document.getElementById('penjual-' + user.id);
+                const badge = document.getElementById('status-' + user.id);
+                const btn   = card?.querySelector('.btn-hapus');
+
+                if (!card || !badge || !btn) return;
+
+                // reset warna
+                card.classList.remove(
+                    'from-green-400','to-green-600',
+                    'from-red-400','to-red-600'
+                );
+                badge.classList.remove('bg-green-800','bg-red-800');
+
+                // ===== ONLINE =====
+                if (user.status_login === 'online') {
+                    card.classList.add('from-green-400','to-green-600');
+                    badge.classList.add('bg-green-800');
+                    badge.innerText = 'ONLINE';
+
+                    btn.disabled = true;
+                    btn.classList.add('bg-gray-400','cursor-not-allowed','opacity-50');
+                    btn.classList.remove('bg-white/20','hover:bg-red-500');
+                }
+                // ===== OFFLINE =====
+                else {
+                    card.classList.add('from-red-400','to-red-600');
+                    badge.classList.add('bg-red-800');
+                    badge.innerText = 'OFFLINE';
+
+                    btn.disabled = false;
+                    btn.classList.remove('bg-gray-400','cursor-not-allowed','opacity-50');
+                    btn.classList.add('bg-white/20','hover:bg-red-500');
+                }
+            });
+        });
+}
+    // cek setiap 5 detik
+    setInterval(updateStatusPenjual, 5000);
+</script>
+<script>
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('btn-hapus')) {
+        const id = e.target.dataset.id;
+        if (!e.target.disabled) {
+            hapusPenjual(id);
+        }
+    }
+});
 </script>
