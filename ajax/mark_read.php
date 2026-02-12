@@ -1,6 +1,8 @@
 <?php
-session_start();
-include '../config/koneksi.php';
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+include __DIR__ . '/../config/koneksi.php';
 
 if (!isset($_SESSION['user'])) exit;
 

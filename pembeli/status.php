@@ -191,18 +191,18 @@ $query = mysqli_query($conn, "
                                     };
                                     ?>
 
-                                    <span class="px-2 py-1 text-xs rounded-full font-semibold <?= $badge ?>">
-                                        <?= ucfirst(str_replace('_', ' ', $status_global)) ?>
-                                    </span>
+                                   <span class="px-2 py-1 text-xs rounded-full font-semibold <?= $badge ?>">
+                                    <?= ucfirst(str_replace('_', ' ', $status_global)) ?>
+                                </span>
 
-                                    <?php if ($status_global === 'refund'): ?>
+                                <?php if (in_array('refund', $allStatuses)): ?>
                                     <?php if (!empty($pesan_refund)): ?>
                                         <div class="mt-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-xs text-yellow-800">
                                             ⚠️ <?= htmlspecialchars($pesan_refund) ?>
                                         </div>
                                     <?php else: ?>
                                         <div class="text-xs text-red-600 mt-1">
-                                            Silahkan datang ke toko
+                                            Silahkan datang ke toko yang bersangkutan untuk proses refund.
                                         </div>
                                     <?php endif; ?>
                                 <?php endif; ?>
