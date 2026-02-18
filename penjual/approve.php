@@ -19,53 +19,94 @@
             $tp_id = (int) $_POST['tp_id'];
             $aksi  = $_POST['aksi'];
 
-        if ($aksi === 'approve') {
+if ($aksi === 'approve') {
 
-            // ambil detail produk milik penjual ini
-            $detail = mysqli_query($conn, "
-                SELECT d.produk_id, d.qty
-                FROM transaksi_detail d
-                JOIN produk p ON d.produk_id = p.id
-                WHERE d.transaksi_id = (
-                    SELECT transaksi_id FROM transaksi_penjual WHERE id = $tp_id
-                )
-                AND p.penjual_id = $penjual_id
-            ");
+    // 🔥 AMBIL transaksi_id DULU
+    $get = mysqli_query($conn, "
+        SELECT transaksi_id 
+        FROM transaksi_penjual 
+        WHERE id = $tp_id
+        AND penjual_id = $penjual_id
+    ");
+    $data = mysqli_fetch_assoc($get);
 
-            // kurangi stok
-            while ($d = mysqli_fetch_assoc($detail)) {
-                $produk_id = (int) $d['produk_id'];
-                $qty       = (int) $d['qty'];
+    if (!$data) {
+        die("Transaksi tidak ditemukan");
+    }
 
-                mysqli_query($conn, "
-                    UPDATE produk
-                    SET stok = stok - $qty
-                    WHERE id = $produk_id
-                    AND stok >= $qty
-                ");
-            }
+    $transaksi_id = (int) $data['transaksi_id'];
+    
 
-            // update status transaksi_penjual
-            mysqli_query($conn, "
-                UPDATE transaksi_penjual
-                SET approve = 'setuju',
-                    status = 'diproses',
-                    approved_at = NOW()
-                WHERE id = $tp_id
-                AND penjual_id = $penjual_id
-            ");
-        }
+    // ambil detail produk milik penjual ini
+    $detail = mysqli_query($conn, "
+        SELECT d.produk_id, d.qty
+        FROM transaksi_detail d
+        JOIN produk p ON d.produk_id = p.id
+        WHERE d.transaksi_id = $transaksi_id
+        AND p.penjual_id = $penjual_id
+    ");
+
+    // kurangi stok
+    while ($d = mysqli_fetch_assoc($detail)) {
+        $produk_id = (int) $d['produk_id'];
+        $qty       = (int) $d['qty'];
+
+        mysqli_query($conn, "
+            UPDATE produk
+            SET stok = stok - $qty
+            WHERE id = $produk_id
+            AND stok >= $qty
+        ");
+    }
+
+    // update transaksi_penjual
+    mysqli_query($conn, "
+        UPDATE transaksi_penjual
+        SET approve = 'setuju',
+            status = 'diproses',
+            approved_at = NOW()
+        WHERE id = $tp_id
+        AND penjual_id = $penjual_id
+        AND status NOT IN ('selesai','refund')
+    ");
+
+    // 🔥 SEKARANG AMAN
+    mysqli_query($conn, "
+        UPDATE transaksi
+        SET status = 'diproses',
+            notif_dibaca_pembeli = 0
+        WHERE id = $transaksi_id
+    ");
+}
+
 
             /* ===== TOLAK ===== */
         elseif ($aksi === 'tolak') {
-            mysqli_query($conn, "
-                UPDATE transaksi_penjual
-                SET approve = 'ditolak',
-                    status = 'refund'
-                WHERE id = $tp_id
-                AND penjual_id = $penjual_id
-            ");
-        }
+
+        // ubah status di transaksi_penjual
+        mysqli_query($conn, "
+            UPDATE transaksi_penjual
+            SET approve = 'ditolak',
+                status = 'refund'
+            WHERE id = $tp_id
+            AND penjual_id = $penjual_id
+        ");
+
+        // ambil transaksi_id dari tp_id
+        $get = mysqli_query($conn, "
+            SELECT transaksi_id FROM transaksi_penjual WHERE id = $tp_id
+        ");
+        $data = mysqli_fetch_assoc($get);
+        $transaksi_id = $data['transaksi_id'];
+
+        // aktifkan notifikasi pembeli
+        mysqli_query($conn, "
+            UPDATE transaksi
+            SET status = 'refund',
+                notif_dibaca_pembeli = 0
+            WHERE id = $transaksi_id
+        ");
+    }
 
         /* ===== INPUT RESI (PER PENJUAL) ===== */
         elseif ($aksi === 'resi' && !empty($_POST['resi']) && isset($_POST['transaksi_id'])) {
@@ -79,7 +120,15 @@
                 SET resi = '$resi', status = 'dikirim'
                 WHERE transaksi_id = $transaksi_id
                 AND penjual_id = $penjual_id
+                 AND status NOT IN ('selesai','refund')
             ");
+            mysqli_query($conn, "
+            UPDATE transaksi
+            SET status = 'dikirim',
+                notif_dibaca_pembeli = 0
+            WHERE id = $transaksi_id
+            AND status NOT IN ('selesai','refund')
+        ");
         }
 
      elseif ($aksi === 'delete') {
@@ -99,7 +148,8 @@
     mysqli_query($conn, "
         UPDATE transaksi
         SET status = 'refund',
-            pesan_refund = 'Silahkan datang ke toko'
+            pesan_refund = 'Silahkan datang ke toko',
+            notif_dibaca_pembeli = 0
         WHERE id = $transaksi_id
     ");
 
@@ -202,6 +252,22 @@
 
         <tbody>
         <?php while ($row = mysqli_fetch_assoc($query)): ?>
+            <?php
+            // 🔥 STATUS GLOBAL = sumber utama dari tabel transaksi
+            $status_global = $row['status'];   // status dari tabel transaksi (GLOBAL)
+
+            // mapping warna status
+            $statusMap = [
+                'menunggu_verifikasi' => ['bg'=>'#fef3c7','text'=>'#92400e'],
+                'diproses'            => ['bg'=>'#e0f2fe','text'=>'#075985'],
+                'dikirim'             => ['bg'=>'#dcfce7','text'=>'#166534'],
+                'selesai'             => ['bg'=>'#ede9fe','text'=>'#5b21b6'],
+                'refund'              => ['bg'=>'#fee2e2','text'=>'#991b1b'],
+            ];
+
+            // warna status aktif
+            $statusColor = $statusMap[$status_global] ?? ['bg'=>'#e5e7eb','text'=>'#374151'];
+            ?>
 
         <?php
         // ambil produk KHUSUS penjual ini
@@ -324,8 +390,18 @@
 
         </td>
 
-
-        <td class="px-4 py-2 text-center"><?= ucfirst($row['status']) ?></td>
+        <td class="px-4 py-2 text-center">
+        <span style="
+            background: <?= $statusColor['bg'] ?>;
+            color: <?= $statusColor['text'] ?>;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        ">
+            <?= strtoupper(str_replace('_',' ', $status_global)) ?>
+        </span>
+    </td>
 
         <td class="px-4 py-2 text-center">
         <?php if ($row['approve'] === 'setuju' && empty($row['resi'])): ?>

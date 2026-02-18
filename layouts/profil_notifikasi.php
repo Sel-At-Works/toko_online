@@ -24,14 +24,15 @@ AND dibaca = 0
     ");
   $notif_chat = mysqli_fetch_assoc($q)['total'];
   
-  // PESANAN
-  $q = mysqli_query($conn, "
-        SELECT COUNT(*) AS total
-        FROM transaksi
-        WHERE pembeli_id = '$user_id'
-        AND status IN ('diproses','MENUNGGU_VERIFIKASI')
-    ");
-  $notif_pesanan = mysqli_fetch_assoc($q)['total'];
+ // NOTIF REFUND
+$q = mysqli_query($conn, "
+    SELECT COUNT(*) AS total
+    FROM transaksi
+    WHERE pembeli_id = '$user_id'
+    AND notif_dibaca_pembeli = 0
+    AND status IN ('dikirim','refund')
+");
+$notif_pesanan = mysqli_fetch_assoc($q)['total'];
 }
 
 /* ===== PENJUAL ===== */ elseif ($role === 'penjual') {
@@ -114,11 +115,18 @@ $total_notif = $notif_chat + $notif_pesanan;
             </span>
 
           </a>
+          <a href="/pesanan/pesan_pembeli.php"
+          class="block p-4 text-sm hover:bg-gray-50 flex justify-between items-center">
 
-          <a href="/pembeli/pesanan_saya.php"
-            class="block p-4 text-sm hover:bg-gray-50">
-            📦 Pesanan sedang diproses
-          </a>
+          <span>📦 Pesanan sedang diproses</span>
+
+          <span id="notifPesanan"
+            class="text-xs bg-orange-500 text-white px-2 rounded-full"
+            style="<?= $notif_pesanan > 0 ? '' : 'display:none' ?>">
+            <?= $notif_pesanan ?>
+          </span>
+
+        </a>
 
         <?php } elseif ($role === 'penjual') { ?>
 

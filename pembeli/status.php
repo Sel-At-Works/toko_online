@@ -172,15 +172,35 @@ $query = mysqli_query($conn, "
                                     }
 
 
-                                    if (in_array('dikirim', $allStatuses) && in_array('refund', $allStatuses)) {
-                                        $status_global = 'sebagian_dikirim';
-                                    } elseif (in_array('refund', $allStatuses)) {
+                                    $total      = count($allStatuses);
+                                    $dikirim    = count(array_filter($allStatuses, fn($s) => $s === 'dikirim'));
+                                    $refund     = count(array_filter($allStatuses, fn($s) => $s === 'refund'));
+                                    $selesai    = count(array_filter($allStatuses, fn($s) => $s === 'selesai'));
+                                    $diproses   = count(array_filter($allStatuses, fn($s) => $s === 'diproses'));
+
+                                    if ($refund == $total) {
                                         $status_global = 'refund';
-                                    } elseif (in_array('dikirim', $allStatuses)) {
+                                    } 
+                                    elseif ($selesai == $total) {
+                                        $status_global = 'selesai';
+                                    }
+                                    elseif ($dikirim == $total) {
                                         $status_global = 'dikirim';
-                                    } else {
+                                    }
+                                    elseif ($selesai > 0 && $dikirim > 0) {
+                                        $status_global = 'sebagian_selesai';
+                                    }
+                                    elseif ($dikirim > 0) {
+                                        $status_global = 'sebagian_dikirim';
+                                    }
+                                    elseif ($diproses > 0) {
+                                        $status_global = 'diproses';
+                                    }
+                                    else {
                                         $status_global = 'menunggu_verifikasi';
                                     }
+
+
 
                                     $badge = match ($status_global) {
                                         'menunggu_verifikasi' => 'bg-orange-100 text-orange-700',
