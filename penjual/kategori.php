@@ -39,9 +39,10 @@ if (isset($_POST['simpan'])) {
             }
 
             /* SIMPAN DATABASE */
+           $user_id = $_SESSION['user_id']; // ID penjual yang login
             mysqli_query($conn, "
-                INSERT INTO kategori (nama_kategori, gambar)
-                VALUES ('$nama', '$gambar')
+                INSERT INTO kategori (nama_kategori, gambar, penjual_id)
+                VALUES ('$nama', '$gambar', $user_id)
             ");
 
             echo "<script>
@@ -55,15 +56,18 @@ if (isset($_POST['simpan'])) {
 /* ================= SEARCH ================= */
 $search = $_GET['search'] ?? '';
 
+$user_id = $_SESSION['user_id'];
 if ($search != '') {
     $kategori = mysqli_query($conn, "
         SELECT * FROM kategori
-        WHERE nama_kategori LIKE '%$search%'
+        WHERE (penjual_id = $user_id OR penjual_id IS NULL)
+        AND nama_kategori LIKE '%$search%'
         ORDER BY id DESC
     ");
 } else {
     $kategori = mysqli_query($conn, "
         SELECT * FROM kategori
+        WHERE penjual_id = $user_id OR penjual_id IS NULL
         ORDER BY id DESC
     ");
 }
@@ -168,16 +172,31 @@ if (!$kategori) {
         <?= htmlspecialchars($row['nama_kategori']); ?>
     </td>
 
-    <td class="py-3">
-        <div class="flex justify-center gap-4">
+<td class="py-3">
+    <div class="flex justify-center gap-4">
+        <?php 
+        // Cek apakah kategori sedang dipakai di produk
+        $kategori_dipakai = false;
+        $cek_produk = mysqli_query($conn, "SELECT id FROM produk WHERE kategori_id = ".$row['id']." LIMIT 1");
+        if(mysqli_num_rows($cek_produk) > 0){
+            $kategori_dipakai = true;
+        }
+
+        if ($row['penjual_id'] === null || $kategori_dipakai): ?>
+            <!-- Tombol disabled -->
+            <button class="p-2 rounded-full bg-yellow-300 text-gray-500 cursor-not-allowed" disabled>✏️</button>
+            <button class="p-2 rounded-full bg-red-300 text-gray-500 cursor-not-allowed" disabled>🗑️</button>
+        <?php else: ?>
+            <!-- Tombol aktif -->
             <a href="edit_kategori.php?id=<?= $row['id']; ?>"
                class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
 
             <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
                onclick="return confirm('Yakin hapus kategori ini?')"
                class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
-        </div>
-    </td>
+        <?php endif; ?>
+    </div>
+</td>
 </tr>
 <?php endwhile; ?>
 <?php else: ?>
