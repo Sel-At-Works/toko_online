@@ -153,16 +153,15 @@ $query = mysqli_query($conn, "
                                 <!-- STATUS -->
                                 <td class="px-4 py-3">
                                     <?php
-                                $tpStatusQ = mysqli_query($conn, "
-                                SELECT 
-                                    tp.status,
-                                    t.pesan_refund
-                                FROM transaksi_penjual tp
-                                JOIN transaksi t ON t.id = tp.transaksi_id
-                                WHERE tp.transaksi_id = {$row['id']}
-                            ");
+                                    $tpStatusQ = mysqli_query($conn, "
+                                        SELECT tp.status, t.pesan_refund
+                                        FROM transaksi_penjual tp
+                                        JOIN transaksi t ON t.id = tp.transaksi_id
+                                        WHERE tp.transaksi_id = {$row['id']}
+                                    ");
+
                                     $pesan_refund = null;
-                                  $allStatuses = [];
+                                    $allStatuses = [];
                                     while ($s = mysqli_fetch_assoc($tpStatusQ)) {
                                         $allStatuses[] = $s['status'];
 
@@ -171,62 +170,67 @@ $query = mysqli_query($conn, "
                                         }
                                     }
 
-
                                     $total      = count($allStatuses);
                                     $dikirim    = count(array_filter($allStatuses, fn($s) => $s === 'dikirim'));
-                                    $refund     = count(array_filter($allStatuses, fn($s) => $s === 'refund'));
                                     $selesai    = count(array_filter($allStatuses, fn($s) => $s === 'selesai'));
+                                    $refund     = count(array_filter($allStatuses, fn($s) => $s === 'refund'));
                                     $diproses   = count(array_filter($allStatuses, fn($s) => $s === 'diproses'));
+                                    $menunggu   = count(array_filter($allStatuses, fn($s) => $s === 'menunggu'));
 
-                                    if ($refund == $total) {
+                                    // ==== LOGIKA KOMBINASI LENGKAP ====
+                                    if ($refund == $total && $total > 0) {
                                         $status_global = 'refund';
-                                    } 
-                                    elseif ($selesai == $total) {
+                                    } elseif ($selesai == $total && $total > 0) {
                                         $status_global = 'selesai';
-                                    }
-                                    elseif ($dikirim == $total) {
+                                    } elseif ($dikirim == $total && $total > 0) {
                                         $status_global = 'dikirim';
-                                    }
-                                    elseif ($selesai > 0 && $dikirim > 0) {
+                                    } elseif ($selesai > 0 && $dikirim > 0 && $refund == 0) {
                                         $status_global = 'sebagian_selesai';
-                                    }
-                                    elseif ($dikirim > 0) {
-                                        $status_global = 'sebagian_dikirim';
-                                    }
-                                    elseif ($diproses > 0) {
+                                    } elseif ($selesai > 0 && $refund > 0 && $dikirim == 0) {
+                                        $status_global = 'sebagian_selesai_refund';
+                                    } elseif ($dikirim > 0 && $refund > 0 && $selesai == 0) {
+                                        $status_global = 'sebagian_dikirim_refund';
+                                    } elseif ($selesai > 0 && $dikirim > 0 && $refund > 0) {
+                                        $status_global = 'sebagian_selesai_dikirim_refund';
+                                    } elseif ($diproses > 0 || $menunggu > 0) {
                                         $status_global = 'diproses';
-                                    }
-                                    else {
+                                    } else {
                                         $status_global = 'menunggu_verifikasi';
                                     }
 
-
-
+                                    // Badge warna
                                     $badge = match ($status_global) {
                                         'menunggu_verifikasi' => 'bg-orange-100 text-orange-700',
                                         'dikirim' => 'bg-blue-100 text-blue-700',
                                         'sebagian_dikirim' => 'bg-yellow-100 text-yellow-700',
+                                        'sebagian_selesai' => 'bg-yellow-200 text-green-800',
+                                        'sebagian_dikirim_refund' => 'bg-pink-100 text-pink-700',
+                                        'sebagian_selesai_refund' => 'bg-purple-100 text-purple-800',
+                                        'sebagian_selesai_dikirim_refund' => 'bg-red-200 text-red-800',
                                         'refund' => 'bg-red-100 text-red-700',
+                                        'selesai' => 'bg-green-100 text-green-700',
+                                        'diproses' => 'bg-gray-100 text-gray-700',
                                         default => 'bg-gray-100 text-gray-700'
                                     };
                                     ?>
 
-                                   <span class="px-2 py-1 text-xs rounded-full font-semibold <?= $badge ?>">
-                                    <?= ucfirst(str_replace('_', ' ', $status_global)) ?>
-                                </span>
+                                    <span class="px-2 py-1 text-xs rounded-full font-semibold <?= $badge ?>">
+                                        <?= ucfirst(str_replace('_', ' ', $status_global)) ?>
+                                    </span>
 
-                                <?php if (in_array('refund', $allStatuses)): ?>
-                                    <?php if (!empty($pesan_refund)): ?>
-                                        <div class="mt-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-xs text-yellow-800">
-                                            ⚠️ <?= htmlspecialchars($pesan_refund) ?>
-                                        </div>
-                                    <?php else: ?>
-                                        <div class="text-xs text-red-600 mt-1">
-                                            Silahkan datang ke toko yang bersangkutan untuk proses refund.
-                                        </div>
+                                    <?php if (in_array('refund', $allStatuses)): ?>
+                                        <?php if (!empty($pesan_refund)): ?>
+                                            <div class="mt-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-xs text-yellow-800">
+                                                ⚠️ <?= htmlspecialchars($pesan_refund) ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="text-xs text-red-600 mt-1">
+                                                Silahkan datang ke toko yang bersangkutan untuk proses refund.
+                                            </div>
+                                        <?php endif; ?>
                                     <?php endif; ?>
-                                <?php endif; ?>
                                 </td>
+
 
                                 <!-- RESI -->
                                 <td class="px-4 py-3">
