@@ -16,6 +16,20 @@ $alamat = mysqli_real_escape_string($conn, $_POST['alamat'] ?? '');
 
 $fotoPath = $_SESSION['user']['foto'] ?? 'uploads/profile/default.png';
 
+/* ================= CEK EMAIL DUPLIKAT ================= */
+$emailCheck = mysqli_query($conn, "
+    SELECT id FROM users 
+    WHERE email = '$email' AND id != $id
+    LIMIT 1
+");
+
+if (mysqli_num_rows($emailCheck) > 0) {
+    // Email sudah dipakai user lain
+    $_SESSION['alert'] = "Email '$email' sudah digunakan!";
+    header("Location: edit_profile.php");
+    exit;
+}
+
 /* ================= NO TELEPON ================= */
 if ($role === 'pembeli') {
     $no_telepon = preg_replace('/[^0-9]/', '', $_POST['no_telepon']);

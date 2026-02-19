@@ -48,6 +48,12 @@ $foto = !empty($user['foto'])
 
 <body class="bg-gradient-to-br from-slate-100 to-slate-200 min-h-screen flex items-center justify-center px-4">
 
+<?php if(isset($_SESSION['alert'])): ?>
+<script>
+    alert("<?= addslashes($_SESSION['alert']); ?>");
+</script>
+<?php unset($_SESSION['alert']); endif; ?>
+
 <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden grid grid-cols-1 md:grid-cols-3">
 
 <!-- ================= LEFT : FOTO ================= -->
