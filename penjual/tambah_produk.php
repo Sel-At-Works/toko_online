@@ -139,7 +139,7 @@ if (isset($_POST['simpan'])) {
                                 </option>
                             <?php } ?>
 
-                            <option value="baru">+ Tambah Kategori Baru</option>
+                            <!-- <option value="baru">+ Tambah Kategori Baru</option> -->
                         </select>
 
 

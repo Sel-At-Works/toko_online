@@ -102,10 +102,15 @@ $query = mysqli_query($conn, "
                 PRODUK
             </h1>
 
-            <a href="tambah_produk.php"
-               class="text-5xl font-bold hover:text-teal-500 transition">+</a>
+            <form action="tambah_produk.php" method="GET">
+                <button type="submit"
+                        class="flex items-center gap-2 bg-teal-500 text-white px-4 py-2 rounded-full font-semibold hover:bg-teal-600 transition">
+                    <span class="text-2xl">+</span>
+                    <span>Tambah Produk</span>
+                </button>
+            </form>
         </div>
-
+        
         <!-- ================= KATEGORI FILTER ================= -->
         <div class="flex flex-wrap gap-3 justify-center mb-10">
 
