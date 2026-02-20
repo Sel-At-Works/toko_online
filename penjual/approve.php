@@ -90,7 +90,8 @@ if ($aksi === 'approve') {
                     UPDATE transaksi_penjual
                     SET approve = 'ditolak',
                         status = 'refund',
-                        alasan_tolak = '$alasan'
+                        alasan_tolak = '$alasan',
+                        refunded_at = NOW()
                     WHERE id = $tp_id
                     AND penjual_id = $penjual_id
                 ");
@@ -178,6 +179,7 @@ if ($aksi === 'approve') {
             tp.bukti_transfer,
             tp.approved_at,
             tp.alasan_tolak,
+            tp.refunded_at,
             t.created_at,
             u.nama AS nama_pembeli,
             u.alamat
@@ -199,11 +201,13 @@ if ($aksi === 'approve') {
         </head>
 
         <body class="bg-gray-100">
-        <div class="flex min-h-screen">
+        <div class="flex h-screen overflow-hidden"> 
 
-        <?php include '../layouts/sidebar_penjual.php'; ?>
+        <div class="w-64 flex-shrink-0 h-screen sticky top-0">
+            <?php include '../layouts/sidebar_penjual.php'; ?>
+        </div>
 
-        <div class="flex-1 p-6">
+        <div class="flex-1 overflow-y-auto p-6">
         <h2 class="text-2xl font-semibold mb-4">Approve Pesanan</h2>
 
             <!-- ===== TOP BAR ===== -->
@@ -330,7 +334,7 @@ if ($aksi === 'approve') {
     ?>
 
 <div class="refund-box"
-     data-refund-time="<?= strtotime($row['created_at']) ?>"
+     data-refund-time="<?= strtotime($row['refunded_at']) ?>"
      data-tp-id="<?= $row['tp_id'] ?>"
      data-transaksi-id="<?= $row['transaksi_id'] ?>">
 
@@ -472,27 +476,30 @@ if ($aksi === 'approve') {
             if(e.target.id === 'imageModal') closeModal();
         });
         </script>
+        </div>
+        </div>
+        </div>
+
+        <!-- ================= REFUND TIMER SCRIPT ================= -->
         <script>
         function initRefundTimer() {
             const boxes = document.querySelectorAll('.refund-box');
 
             boxes.forEach(box => {
-                const refundTime = parseInt(box.dataset.refundTime) * 1000; // ms
+                const refundTime = parseInt(box.dataset.refundTime) * 1000;
                 const countdownText = box.querySelector('.countdown-text');
                 const deleteForm = box.querySelector('.delete-form');
 
                 function update() {
                     const now = Date.now();
-                    const diff = Math.floor((now - refundTime) / 1000); // detik
+                    const diff = Math.floor((now - refundTime) / 1000);
 
                     if (diff >= 60) {
-                        // tampilkan delete
                         countdownText.classList.add('hidden');
                         deleteForm.classList.remove('hidden');
                     } else {
-                        // tampilkan countdown
                         const sisa = 60 - diff;
-                        countdownText.innerText = `Hapus tersedia dalam ${sisa} detik`;
+                        countdownText.innerText = `Delete aktif dalam ${sisa} detik`;
                     }
                 }
 
@@ -503,9 +510,5 @@ if ($aksi === 'approve') {
 
         document.addEventListener('DOMContentLoaded', initRefundTimer);
         </script>
-
-        </div>
-        </div>
-        </div>
         </body>
         </html>

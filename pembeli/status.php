@@ -53,13 +53,15 @@ $query = mysqli_query($conn, "
 
 <body class="bg-gray-100">
 
-    <div class="flex min-h-screen">
+    <div class="flex h-screen overflow-hidden">
 
         <!-- ================= SIDEBAR ================= -->
+      <div class="w-64 flex-shrink-0 h-screen sticky top-0">
         <?php include '../layouts/sidebar_pembeli.php'; ?>
+    </div>
 
         <!-- ================= CONTENT ================= -->
-        <div class="flex-1 px-6 py-6">
+        <div class="flex-1 overflow-y-auto px-6 py-6">
 
             <!-- ===== TOP BAR ===== -->
             <div class="flex items-center gap-4 mb-6">
