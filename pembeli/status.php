@@ -97,6 +97,7 @@ $query = mysqli_query($conn, "
                             <th class="px-4 py-3">Total</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Resi</th>
+                            <th class="px-4 py-3">Tracking</th>
                             <th class="px-4 py-3">Tanggal</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
@@ -156,19 +157,23 @@ $query = mysqli_query($conn, "
                                 <td class="px-4 py-3">
                                     <?php
                                     $tpStatusQ = mysqli_query($conn, "
-                                        SELECT tp.status, t.pesan_refund
+                                        SELECT tp.status, tp.alasan_tolak, tp.penjual_id
                                         FROM transaksi_penjual tp
-                                        JOIN transaksi t ON t.id = tp.transaksi_id
                                         WHERE tp.transaksi_id = {$row['id']}
                                     ");
 
-                                    $pesan_refund = null;
+                                    $alasan_tolak = [];
                                     $allStatuses = [];
+
                                     while ($s = mysqli_fetch_assoc($tpStatusQ)) {
                                         $allStatuses[] = $s['status'];
 
-                                        if ($s['status'] === 'refund' && !empty($s['pesan_refund'])) {
-                                            $pesan_refund = $s['pesan_refund'];
+                                        // Simpan alasan tolak jika status = 'refund' atau 'ditolak'
+                                        if (($s['status'] === 'refund' || $s['status'] === 'ditolak') && !empty($s['alasan_tolak'])) {
+                                            $alasan_tolak[] = [
+                                                'penjual_id' => $s['penjual_id'],
+                                                'pesan' => $s['alasan_tolak']
+                                            ];
                                         }
                                     }
 
@@ -220,16 +225,16 @@ $query = mysqli_query($conn, "
                                         <?= ucfirst(str_replace('_', ' ', $status_global)) ?>
                                     </span>
 
-                                    <?php if (in_array('refund', $allStatuses)): ?>
-                                        <?php if (!empty($pesan_refund)): ?>
+                                    <?php if (!empty($alasan_tolak)): ?>
+                                        <?php foreach ($alasan_tolak as $at): ?>
                                             <div class="mt-2 p-2 bg-yellow-50 border border-yellow-300 rounded text-xs text-yellow-800">
-                                                ⚠️ <?= htmlspecialchars($pesan_refund) ?>
+                                                ⚠️ <?= htmlspecialchars($at['pesan']) ?>
                                             </div>
-                                        <?php else: ?>
-                                            <div class="text-xs text-red-600 mt-1">
-                                                Silahkan datang ke toko yang bersangkutan untuk proses refund.
-                                            </div>
-                                        <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php elseif (in_array('refund', $allStatuses) || in_array('ditolak', $allStatuses)): ?>
+                                        <div class="text-xs text-red-600 mt-1">
+                                            Silahkan datang ke toko yang bersangkutan untuk proses refund.
+                                        </div>
                                     <?php endif; ?>
                                 </td>
 
@@ -262,6 +267,43 @@ $query = mysqli_query($conn, "
                                     endif;
                                     ?>
                                 </td>
+                            
+                                 <!-- TRACKING -->
+                                    <td class="px-4 py-3">
+                                    <?php
+                                    $tpTracking = mysqli_query($conn, "
+                                        SELECT 
+                                            u.nama AS nama_penjual,
+                                            tp.link_lacak
+                                        FROM transaksi_penjual tp
+                                        JOIN users u ON tp.penjual_id = u.id
+                                        WHERE tp.transaksi_id = {$row['id']}
+                                        GROUP BY tp.penjual_id, u.nama, tp.link_lacak
+                                    ");
+
+                                    if (mysqli_num_rows($tpTracking) > 0):
+                                        while ($t = mysqli_fetch_assoc($tpTracking)):
+                                    ?>
+                                            <div class="text-xs flex flex-col gap-1">
+                                                <span class="font-semibold"><?= $t['nama_penjual'] ?>:</span>
+
+                                                <?php if (!empty($t['link_lacak'])): ?>
+                                                    <a href="<?= htmlspecialchars($t['link_lacak']) ?>" 
+                                                    target="_blank"
+                                                    class="inline-block text-blue-600 underline font-semibold">
+                                                    📦 Lacak Paket
+                                                    </a>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400">-</span>
+                                                <?php endif; ?>
+                                            </div>
+                                    <?php
+                                        endwhile;
+                                    else:
+                                        echo '-';
+                                    endif;
+                                    ?>
+                                    </td>
 
 
                                 <!-- TANGGAL -->

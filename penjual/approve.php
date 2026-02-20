@@ -117,15 +117,18 @@ if ($aksi === 'approve') {
         elseif ($aksi === 'resi' && !empty($_POST['resi']) && isset($_POST['transaksi_id'])) {
 
             $resi         = mysqli_real_escape_string($conn, $_POST['resi']);
+            $link_lacak   = mysqli_real_escape_string($conn, $_POST['link_lacak'] ?? '');
             $transaksi_id = (int) $_POST['transaksi_id'];
 
             // Update hanya untuk penjual yang login
             mysqli_query($conn, "
-                UPDATE transaksi_penjual
-                SET resi = '$resi', status = 'dikirim'
-                WHERE transaksi_id = $transaksi_id
-                AND penjual_id = $penjual_id
-                 AND status NOT IN ('selesai','refund')
+            UPDATE transaksi_penjual
+            SET resi = '$resi',
+                link_lacak = '$link_lacak',
+                status = 'dikirim'
+            WHERE transaksi_id = $transaksi_id
+            AND penjual_id = $penjual_id
+            AND status NOT IN ('selesai','refund')
             ");
             mysqli_query($conn, "
             UPDATE transaksi
@@ -175,6 +178,7 @@ if ($aksi === 'approve') {
             tp.status,
             tp.approve,
             tp.resi,
+            tp.link_lacak,
             tp.metode_pembayaran,
             tp.bukti_transfer,
             tp.approved_at,
@@ -243,6 +247,7 @@ if ($aksi === 'approve') {
             <th class="px-4 py-2">Approve</th>
             <th class="px-4 py-2">Status</th>
             <th class="px-4 py-2">Resi</th>
+            <th class="px-4 py-2">Tracking</th>
             <th class="px-4 py-2">Pembeli</th>
             <th class="px-4 py-2">Invoice</th>
         </tr>
@@ -421,11 +426,25 @@ if ($aksi === 'approve') {
 
         <td class="px-4 py-2 text-center">
         <?php if ($row['approve'] === 'setuju' && empty($row['resi'])): ?>
-        <form method="post" class="flex gap-1 justify-center">
+        <form method="post" class="flex flex-col gap-1 items-center justify-center">
             <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
             <input type="hidden" name="transaksi_id" value="<?= $row['transaksi_id'] ?>">
-            <input type="text" name="resi" required class="border px-2 py-1 text-xs rounded w-24">
-            <button name="aksi" value="resi" class="bg-blue-500 text-white text-xs px-2 py-1 rounded">
+
+            <!-- RESI -->
+            <input type="text" 
+                name="resi" 
+                required 
+                placeholder="No Resi"
+                class="border px-2 py-1 text-xs rounded w-36">
+
+            <!-- LINK LACAK -->
+            <input type="url" 
+                name="link_lacak" 
+                placeholder="Link Lacak Paket"
+                class="border px-2 py-1 text-xs rounded w-36">
+
+            <button name="aksi" value="resi" 
+                class="bg-blue-500 text-white text-xs px-2 py-1 rounded w-36">
                 Simpan
             </button>
         </form>
@@ -433,6 +452,19 @@ if ($aksi === 'approve') {
         <span class="text-green-600 font-semibold"><?= $row['resi'] ?></span>
         <?php else: ?>
         -
+        <?php endif; ?>
+        </td>
+
+        <!-- TRACKING -->
+        <td class="px-4 py-2 text-center">
+        <?php if (!empty($row['link_lacak'])): ?>
+            <a href="<?= htmlspecialchars($row['link_lacak']) ?>" 
+            target="_blank"
+            class="text-blue-600 underline text-xs font-semibold">
+            Lacak Paket
+            </a>
+        <?php else: ?>
+            -
         <?php endif; ?>
         </td>
 
