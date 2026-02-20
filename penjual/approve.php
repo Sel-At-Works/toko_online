@@ -81,32 +81,36 @@ if ($aksi === 'approve') {
 
 
             /* ===== TOLAK ===== */
-        elseif ($aksi === 'tolak') {
+            elseif ($aksi === 'tolak') {
 
-        // ubah status di transaksi_penjual
-        mysqli_query($conn, "
-            UPDATE transaksi_penjual
-            SET approve = 'ditolak',
-                status = 'refund'
-            WHERE id = $tp_id
-            AND penjual_id = $penjual_id
-        ");
+                $alasan = mysqli_real_escape_string($conn, $_POST['alasan'] ?? 'Ditolak oleh penjual');
 
-        // ambil transaksi_id dari tp_id
-        $get = mysqli_query($conn, "
-            SELECT transaksi_id FROM transaksi_penjual WHERE id = $tp_id
-        ");
-        $data = mysqli_fetch_assoc($get);
-        $transaksi_id = $data['transaksi_id'];
+                // update transaksi_penjual
+                mysqli_query($conn, "
+                    UPDATE transaksi_penjual
+                    SET approve = 'ditolak',
+                        status = 'refund',
+                        alasan_tolak = '$alasan'
+                    WHERE id = $tp_id
+                    AND penjual_id = $penjual_id
+                ");
 
-        // aktifkan notifikasi pembeli
-        mysqli_query($conn, "
-            UPDATE transaksi
-            SET status = 'refund',
-                notif_dibaca_pembeli = 0
-            WHERE id = $transaksi_id
-        ");
-    }
+                // ambil transaksi_id
+                $get = mysqli_query($conn, "
+                    SELECT transaksi_id FROM transaksi_penjual WHERE id = $tp_id
+                ");
+                $data = mysqli_fetch_assoc($get);
+                $transaksi_id = $data['transaksi_id'];
+
+                // update transaksi global + notif pembeli
+                mysqli_query($conn, "
+                    UPDATE transaksi
+                    SET status = 'refund',
+                        pesan_refund = '$alasan',
+                        notif_dibaca_pembeli = 0
+                    WHERE id = $transaksi_id
+                ");
+            }
 
         /* ===== INPUT RESI (PER PENJUAL) ===== */
         elseif ($aksi === 'resi' && !empty($_POST['resi']) && isset($_POST['transaksi_id'])) {
@@ -131,33 +135,22 @@ if ($aksi === 'approve') {
         ");
         }
 
-     elseif ($aksi === 'delete') {
+        /* ===== DELETE (HANYA UNTUK STATUS REFUND) ===== */
+        elseif ($aksi === 'delete') {
 
-    $tp_id = (int) $_POST['tp_id'];
-    $transaksi_id = (int) $_POST['transaksi_id'];
+            $tp_id = (int) $_POST['tp_id'];
 
-    // 1. sembunyikan dari penjual
-    mysqli_query($conn, "
-        UPDATE transaksi_penjual
-        SET is_hidden = 1
-        WHERE id = $tp_id
-        AND penjual_id = $penjual_id
-    ");
+            mysqli_query($conn, "
+                UPDATE transaksi_penjual
+                SET is_hidden = 1
+                WHERE id = $tp_id
+                AND penjual_id = $penjual_id
+            ");
 
-    // 2. ubah status transaksi jadi refund
-    mysqli_query($conn, "
-        UPDATE transaksi
-        SET status = 'refund',
-            pesan_refund = 'Silahkan datang ke toko',
-            notif_dibaca_pembeli = 0
-        WHERE id = $transaksi_id
-    ");
-
-    header("Location: approve.php");
-    exit;
-}
-
+            header("Location: approve.php");
+            exit;
         }
+            }
 
         /* ================= SEARCH ================= */
         $q = mysqli_real_escape_string($conn, $_GET['q'] ?? '');
@@ -184,6 +177,7 @@ if ($aksi === 'approve') {
             tp.metode_pembayaran,
             tp.bukti_transfer,
             tp.approved_at,
+            tp.alasan_tolak,
             t.created_at,
             u.nama AS nama_pembeli,
             u.alamat
@@ -325,83 +319,101 @@ if ($aksi === 'approve') {
 
 
         <!-- tombol approve 1 menit -->
-        <td class="px-4 py-2 text-center">
+<td class="px-4 py-2 text-center">
 
-        <?php if ($row['approve'] === 'menunggu'): ?>
+<?php if ($row['status'] === 'refund'): ?>
 
-        <form method="post" class="inline">
+    <?php
+    $updated_at = $row['updated_at'] ?? $row['created_at'];
+    $refund_time = strtotime($updated_at);
+    $now = time();
+    ?>
+
+<div class="refund-box"
+     data-refund-time="<?= strtotime($row['created_at']) ?>"
+     data-tp-id="<?= $row['tp_id'] ?>"
+     data-transaksi-id="<?= $row['transaksi_id'] ?>">
+
+    <span class="text-xs text-gray-500 countdown-text">
+        Menunggu...
+    </span>
+
+    <form method="post" class="delete-form hidden" 
+          onsubmit="return confirm('Hapus transaksi ini?')">
+        <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
+        <input type="hidden" name="transaksi_id" value="<?= $row['transaksi_id'] ?>">
+        <button name="aksi" value="delete"
+            class="px-2 py-1 bg-gray-700 text-white text-xs rounded">
+            Delete
+        </button>
+    </form>
+
+</div>
+
+
+<?php elseif ($row['approve'] === 'menunggu'): ?>
+
+    <div class="flex flex-col items-center gap-2">
+
+        <!-- SETUJU -->
+        <form method="post">
             <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
             <button name="aksi" value="approve"
-                class="px-2 py-1 bg-green-500 text-white text-xs rounded">
+                class="px-3 py-1 bg-green-500 text-white text-xs rounded w-32">
                 Setujui
             </button>
+        </form>
+
+        <!-- TOLAK -->
+        <form method="post" class="flex flex-col gap-1 items-center">
+            <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
+
+            <select name="alasan" required
+                class="border text-xs rounded px-2 py-1 w-36">
+                <option value="">-- Alasan Tolak --</option>
+                <option value="Stok habis">Stok habis</option>
+                <option value="Produk rusak">Produk rusak</option>
+                <option value="Alamat tidak valid">Alamat tidak valid</option>
+                <option value="Pembayaran tidak valid">Pembayaran tidak valid</option>
+                <option value="Produk tidak tersedia">Produk tidak tersedia</option>
+                <option value="Lainnya">Lainnya</option>
+            </select>
+
             <button name="aksi" value="tolak"
-                class="px-2 py-1 bg-red-500 text-white text-xs rounded">
+                class="px-3 py-1 bg-red-500 text-white text-xs rounded w-32">
                 Tolak
             </button>
         </form>
 
-        <?php elseif ($row['status'] === 'refund'): ?>
+    </div>
+<?php else: ?>
+    <span class="font-semibold"><?= ucfirst($row['approve']) ?></span>
+<?php endif; ?>
+</td>
 
-        <?php
-        $updated_at = $row['updated_at'] ?? $row['created_at']; // pakai updated_at kalau ada
-        $refund_time = strtotime($updated_at);
-        $now = time();
-        ?>
-
-        <?php if ($row['approve'] === 'menunggu'): ?>
-            <form method="post" class="inline">
-                <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
-                <button name="aksi" value="approve"
-                    class="px-2 py-1 bg-green-500 text-white text-xs rounded">
-                    Setujui
-                </button>
-                <button name="aksi" value="tolak"
-                    class="px-2 py-1 bg-red-500 text-white text-xs rounded">
-                    Tolak
-                </button>
-            </form>
-
-        <?php elseif ($row['status'] === 'refund'): ?>
-
-            <?php if ($refund_time && ($now - $refund_time >= 60)): ?>
-                <form method="post" onsubmit="return confirm('Hapus transaksi ini?')">
-                    <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
-                    <button name="aksi" value="delete"
-                        class="px-2 py-1 bg-gray-700 text-white text-xs rounded">
-                        Delete
-                    </button>
-                </form>
-            <?php else: ?>
-                <span class="text-xs text-gray-500">Menunggu...</span>
+         <td class="px-4 py-2 text-center">
+        <?php if($row['status'] === 'refund'): ?>
+            <div class="text-xs text-red-600 font-semibold">
+                REFUND
+            </div>
+            <?php if(!empty($row['alasan_tolak'])): ?>
+               <div class="mt-1 px-2 py-1 bg-gray-100 rounded text-[10px] text-gray-600 italic">
+                    <?= htmlspecialchars($row['alasan_tolak']) ?>
+                </div>
             <?php endif; ?>
-
         <?php else: ?>
-            <span class="font-semibold"><?= ucfirst($row['approve']) ?></span>
+            <span style="
+                background: <?= $statusColor['bg'] ?>;
+                color: <?= $statusColor['text'] ?>;
+                padding: 4px 10px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 600;
+            ">
+                <?= strtoupper(str_replace('_',' ', $status_global)) ?>
+            </span>
         <?php endif; ?>
-
-
-        <?php else: ?>
-
-
-        <span class="font-semibold"><?= ucfirst($row['approve']) ?></span>
-
-        <?php endif; ?>
-
         </td>
-
-        <td class="px-4 py-2 text-center">
-        <span style="
-            background: <?= $statusColor['bg'] ?>;
-            color: <?= $statusColor['text'] ?>;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 600;
-        ">
-            <?= strtoupper(str_replace('_',' ', $status_global)) ?>
-        </span>
-    </td>
 
         <td class="px-4 py-2 text-center">
         <?php if ($row['approve'] === 'setuju' && empty($row['resi'])): ?>
@@ -459,6 +471,37 @@ if ($aksi === 'approve') {
         document.getElementById('imageModal').addEventListener('click', function(e){
             if(e.target.id === 'imageModal') closeModal();
         });
+        </script>
+        <script>
+        function initRefundTimer() {
+            const boxes = document.querySelectorAll('.refund-box');
+
+            boxes.forEach(box => {
+                const refundTime = parseInt(box.dataset.refundTime) * 1000; // ms
+                const countdownText = box.querySelector('.countdown-text');
+                const deleteForm = box.querySelector('.delete-form');
+
+                function update() {
+                    const now = Date.now();
+                    const diff = Math.floor((now - refundTime) / 1000); // detik
+
+                    if (diff >= 60) {
+                        // tampilkan delete
+                        countdownText.classList.add('hidden');
+                        deleteForm.classList.remove('hidden');
+                    } else {
+                        // tampilkan countdown
+                        const sisa = 60 - diff;
+                        countdownText.innerText = `Hapus tersedia dalam ${sisa} detik`;
+                    }
+                }
+
+                update();
+                setInterval(update, 1000);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initRefundTimer);
         </script>
 
         </div>
