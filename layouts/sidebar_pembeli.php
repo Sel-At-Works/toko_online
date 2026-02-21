@@ -59,9 +59,9 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     Status
 </a>
 
-      <a href=""
+      <a href="laporan_pembeli.php"
    class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
-   <?= $currentPage == 'laporan.php'
+   <?= $currentPage == 'laporan_pembeli.php'
       ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white shadow-lg scale-105'
       : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600 active:scale-95' ?>">
     laporan
@@ -69,15 +69,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
   <a href="../chat_app.php"
    class="block px-5 py-3 rounded-full font-semibold transition-all
-   <?= $currentPage == 'chat_list.php'
+   <?= $currentPage == 'chat_app.php'
       ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white'
       : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600' ?>">
    Chat
 </a>
-
-
-
-
         </nav>
     </div>
 
