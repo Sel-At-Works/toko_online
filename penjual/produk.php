@@ -29,8 +29,6 @@ if (!empty($search)) {
     )";
 }
 
-
-// ================== KATEGORI YANG DIPILIH ==================
 // ================== KATEGORI YANG DIPILIH ==================
 $kategori_id = $_GET['kategori_id'] ?? '';
 $where_kategori = $kategori_id ? "AND p.kategori_id = $kategori_id" : "";
@@ -200,9 +198,22 @@ font-extrabold text-sm
             <a href="detail_produk.php?id=<?= $row['id'] ?>"
                class="p-2 rounded-full bg-white/20 hover:bg-blue-400">👁️</a>
 
+            <?php if ($row['stok'] > 0): ?>
+            <!-- DISABLE DELETE -->
+            <span
+                class="p-2 rounded-full bg-white/20 opacity-40 cursor-not-allowed"
+                title="Tidak bisa dihapus, stok masih ada">
+                🗑️
+            </span>
+        <?php else: ?>
+            <!-- AKTIF DELETE -->
             <a href="hapus_produk.php?id=<?= $row['id'] ?>"
-               onclick="return confirm('Yakin ingin menghapus produk ini?')"
-               class="p-2 rounded-full bg-white/20 hover:bg-red-500">🗑️</a>
+            onclick="return confirm('Yakin ingin menghapus produk ini?')"
+            class="p-2 rounded-full bg-white/20 hover:bg-red-500"
+            title="Hapus produk">
+                🗑️
+            </a>
+        <?php endif; ?>
         </div>
 
     </div>

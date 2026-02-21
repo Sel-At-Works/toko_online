@@ -8,20 +8,20 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$penjual_id = $_SESSION['user_id'];
-$id = $_GET['id'] ?? '';
+$penjual_id = intval($_SESSION['user_id']);
+$id = intval($_GET['id'] ?? 0);
 
-if ($id == '') {
+if ($id <= 0) {
     header("Location: produk.php");
     exit;
 }
 
 // ================= CEK PRODUK =================
 $cek = mysqli_query($conn, "
-    SELECT gambar 
+    SELECT gambar, stok 
     FROM produk 
-    WHERE id = '$id' 
-      AND penjual_id = '$penjual_id'
+    WHERE id = $id 
+      AND penjual_id = $penjual_id
     LIMIT 1
 ");
 
@@ -30,6 +30,15 @@ $produk = mysqli_fetch_assoc($cek);
 if (!$produk) {
     echo "<script>
         alert('Produk tidak ditemukan atau bukan milik Anda');
+        window.location='produk.php';
+    </script>";
+    exit;
+}
+
+// ================= CEK STOK =================
+if ($produk['stok'] > 0) {
+    echo "<script>
+        alert('Produk tidak bisa dihapus karena stok masih tersedia!');
         window.location='produk.php';
     </script>";
     exit;
@@ -46,8 +55,8 @@ if (!empty($produk['gambar'])) {
 // ================= HAPUS PRODUK =================
 mysqli_query($conn, "
     DELETE FROM produk 
-    WHERE id = '$id' 
-      AND penjual_id = '$penjual_id'
+    WHERE id = $id 
+      AND penjual_id = $penjual_id
 ");
 
 // ================= REDIRECT =================
