@@ -23,9 +23,10 @@ $search_safe = mysqli_real_escape_string($conn, $search);
 
 $where_search = '';
 if (!empty($search)) {
+    $search_safe = strtolower($search_safe);
     $where_search = "AND (
-        produk.nama_produk LIKE '%$search_safe%' 
-        OR produk.deskripsi LIKE '%$search_safe%'
+        LOWER(p.nama_produk) LIKE '%$search_safe%' 
+        OR LOWER(p.deskripsi) LIKE '%$search_safe%'
     )";
 }
 
