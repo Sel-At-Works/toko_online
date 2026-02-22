@@ -27,7 +27,8 @@ if ($role === 'pembeli') {
     SELECT COUNT(*) total
     FROM transaksi
     WHERE pembeli_id = '$user_id'
-    AND status IN ('diproses','MENUNGGU_VERIFIKASI')
+    AND notif_dibaca_pembeli = 0
+    AND status IN ('dikirim','refund')
   ");
   $notif_pesanan = mysqli_fetch_assoc($q)['total'];
 

@@ -243,15 +243,25 @@ $total_notif = $notif_chat + $notif_pesanan;
       .then(res => res.json())
       .then(data => {
 
-        // TOTAL
-        const totalBadge = document.getElementById('notifTotal');
-        if (data.total > 0) {
-          if (!totalBadge) location.reload();
+      // TOTAL
+      let totalBadge = document.getElementById('notifTotal');
+
+      if (data.total > 0) {
+        if (!totalBadge) {
+          const btn = document.getElementById('notifBtn');
+          const span = document.createElement('span');
+          span.id = 'notifTotal';
+          span.className = "absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full";
+          span.innerText = data.total;
+          btn.appendChild(span);
+          totalBadge = span;
+        } else {
           totalBadge.innerText = data.total;
           totalBadge.style.display = 'flex';
-        } else if (totalBadge) {
-          totalBadge.style.display = 'none';
         }
+      } else if (totalBadge) {
+        totalBadge.style.display = 'none';
+      }
 
         // CHAT
         const chatBadge = document.getElementById('notifChat');
