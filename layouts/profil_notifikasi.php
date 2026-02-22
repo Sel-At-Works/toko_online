@@ -7,14 +7,7 @@ include $_SERVER['DOCUMENT_ROOT'] . '/config/koneksi.php';
 
 $user    = $_SESSION['user'];
 /* ===== FOTO / AVATAR ===== */
-$foto = null;
-
-if (!empty($user['foto'])) {
-    $path = $_SERVER['DOCUMENT_ROOT'] . '/' . $user['foto']; // path fisik file
-    if (file_exists($path)) {
-        $foto = $user['foto']; // hanya set kalau file benar-benar ada
-    }
-}
+$foto = !empty($user['foto']) ? $user['foto'] : null;
 
 /* ===== INISIAL USER ===== */
 $nama = trim($user['nama'] ?? $user['email']);

@@ -98,6 +98,7 @@ $query = mysqli_query($conn, "
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Resi</th>
                             <th class="px-4 py-3">Tracking</th>
+                            <th class="px-4 py-3">Bukti Transfer</th>
                             <th class="px-4 py-3">Tanggal</th>
                             <th class="px-4 py-3 text-center">Aksi</th>
                         </tr>
@@ -110,17 +111,17 @@ $query = mysqli_query($conn, "
                             <?php
                             $kode = 'INV-' . date('Ymd', strtotime($row['created_at'])) . '-' . $row['id'];
                             $detailQ = mysqli_query($conn, "
-    SELECT d.qty, p.nama_produk
-    FROM transaksi_detail d
-    JOIN produk p ON d.produk_id = p.id
-    WHERE d.transaksi_id = {$row['id']}
-      AND EXISTS (
-          SELECT 1 
-          FROM transaksi_penjual tp
-          WHERE tp.transaksi_id = d.transaksi_id
-            AND tp.penjual_id = p.penjual_id
-      )
-");
+                            SELECT d.qty, p.nama_produk
+                            FROM transaksi_detail d
+                            JOIN produk p ON d.produk_id = p.id
+                            WHERE d.transaksi_id = {$row['id']}
+                            AND EXISTS (
+                                SELECT 1 
+                                FROM transaksi_penjual tp
+                                WHERE tp.transaksi_id = d.transaksi_id
+                                    AND tp.penjual_id = p.penjual_id
+                            )
+                        ");
 
                             ?>
 
@@ -295,6 +296,49 @@ $query = mysqli_query($conn, "
                                                     </a>
                                                 <?php else: ?>
                                                     <span class="text-gray-400">-</span>
+                                                <?php endif; ?>
+                                            </div>
+                                    <?php
+                                        endwhile;
+                                    else:
+                                        echo '-';
+                                    endif;
+                                    ?>
+                                    </td>
+
+                                    <!-- BUKTI TRANSFER -->
+                                    <td class="px-4 py-3">
+                                    <?php
+                                    $buktiQ = mysqli_query($conn, "
+                                        SELECT 
+                                            u.nama AS nama_penjual,
+                                            tp.bukti_transfer
+                                        FROM transaksi_penjual tp
+                                        JOIN users u ON tp.penjual_id = u.id
+                                        WHERE tp.transaksi_id = {$row['id']}
+                                    ");
+
+                                    if (mysqli_num_rows($buktiQ) > 0):
+                                        while ($b = mysqli_fetch_assoc($buktiQ)):
+                                    ?>
+                                            <div class="text-xs mb-2">
+                                                <div class="font-semibold"><?= $b['nama_penjual'] ?>:</div>
+
+                                                <?php if (!empty($b['bukti_transfer'])): 
+                                                    $path = '../uploads/bukti/' . $b['bukti_transfer'];
+                                                ?>
+                                                    <?php if (file_exists($path)): ?>
+                                                        <a href="<?= $path ?>" target="_blank">
+                                                            <img 
+                                                                src="<?= $path ?>" 
+                                                                class="w-16 h-16 object-cover rounded border hover:scale-105 transition"
+                                                                alt="Bukti Transfer">
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <span class="text-red-400 italic">File tidak ditemukan</span>
+                                                    <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="text-gray-400 italic">Belum upload</span>
                                                 <?php endif; ?>
                                             </div>
                                     <?php
