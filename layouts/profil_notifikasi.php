@@ -6,6 +6,19 @@ if (!isset($_SESSION['user'])) {
 include $_SERVER['DOCUMENT_ROOT'] . '/config/koneksi.php';
 
 $user    = $_SESSION['user'];
+/* ===== FOTO / AVATAR ===== */
+$foto = !empty($user['foto']) ? $user['foto'] : null;
+
+/* ===== INISIAL USER ===== */
+$nama = trim($user['nama'] ?? $user['email']);
+$inisial = '';
+$namaArr = explode(' ', $nama);
+
+if (count($namaArr) >= 2) {
+    $inisial = strtoupper(substr($namaArr[0],0,1) . substr($namaArr[1],0,1));
+} else {
+    $inisial = strtoupper(substr($namaArr[0],0,2));
+}
 $user_id = $user['id'];
 $role    = $user['role'];
 
@@ -191,11 +204,24 @@ $total_notif = $notif_chat + $notif_pesanan;
       </p>
     </div>
 
-    <img src="/<?= !empty($user['foto'])
-                  ? $user['foto']
-                  : 'uploads/profile/default.png'; ?>"
-      class="w-10 h-10 rounded-full object-cover border"
-      alt="Profile">
+<?php if ($foto): ?>
+
+    <!-- FOTO ASLI -->
+    <img src="/<?= htmlspecialchars($foto) ?>"
+         class="w-10 h-10 rounded-full object-cover border"
+         alt="Profile">
+
+<?php else: ?>
+
+    <!-- AVATAR INISIAL -->
+    <div class="w-10 h-10 rounded-full border
+                bg-teal-500 text-white
+                flex items-center justify-center
+                font-bold text-sm">
+        <?= $inisial ?>
+    </div>
+
+<?php endif; ?>
 
   </a>
 </div>

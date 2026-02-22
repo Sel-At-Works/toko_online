@@ -50,9 +50,18 @@ switch ($user['role']) {
 }
 
 /* ================== FOTO PROFILE ================== */
-$foto = !empty($user['foto'])
-    ? $baseUrl . $user['foto']
-    : $baseUrl . 'uploads/profile/default.png';
+$foto = !empty($user['foto']) ? $baseUrl . $user['foto'] : null;
+
+/* ===== INISIAL USER ===== */
+$nama = trim($user['nama']);
+$inisial = '';
+$namaArr = explode(' ', $nama);
+
+if (count($namaArr) >= 2) {
+    $inisial = strtoupper(substr($namaArr[0],0,1) . substr($namaArr[1],0,1));
+} else {
+    $inisial = strtoupper(substr($namaArr[0],0,2));
+}
 ?>
 
 <!DOCTYPE html>
@@ -71,9 +80,23 @@ $foto = !empty($user['foto'])
 <div class="bg-gradient-to-b from-teal-600 to-emerald-500 p-8 text-white
             flex flex-col items-center justify-center gap-4">
 
+<?php if ($foto): ?>
+
+    <!-- FOTO ASLI -->
     <img src="<?= htmlspecialchars($foto) ?>"
          class="w-28 h-28 rounded-full border-4 border-white shadow-lg
                 object-cover bg-white">
+
+<?php else: ?>
+
+    <!-- INISIAL -->
+    <div class="w-28 h-28 rounded-full border-4 border-white shadow-lg
+                bg-white flex items-center justify-center
+                text-3xl font-extrabold text-teal-600">
+        <?= $inisial ?>
+    </div>
+
+<?php endif; ?>
 
     <h2 class="text-xl font-bold text-center">
         <?= htmlspecialchars($user['nama']) ?>
