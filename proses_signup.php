@@ -64,6 +64,19 @@ if ($role === 'super_admin') {
 $password_hash = password_hash($password, PASSWORD_DEFAULT);
 
 // =====================
+// CEK NIK SUDAH ADA ATAU BELUM
+// =====================
+$cekNik = mysqli_query($conn, "SELECT id FROM users WHERE nik = '$nik' LIMIT 1");
+
+if (mysqli_num_rows($cekNik) > 0) {
+    echo "<script>
+        alert('NIK sudah terdaftar! Silakan gunakan NIK lain.');
+        history.back();
+    </script>";
+    exit;
+}
+
+// =====================
 // INSERT DATABASE
 // =====================
 $query = "INSERT INTO users (role_id, nik, nama, email, alamat, password)
