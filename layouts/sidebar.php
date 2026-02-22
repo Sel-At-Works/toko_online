@@ -28,7 +28,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
    <?= $currentPage == 'admin.php'
       ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white shadow-lg scale-105'
       : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600 active:scale-95' ?>">
-    Admin
+    Penjual
 </a>
 
 
@@ -59,9 +59,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             ⎋ <span>Sign Out</span>
         </a>
 
-        <div class="flex items-center gap-2 cursor-pointer transition-all duration-200
-                    hover:text-teal-600 active:scale-95">
-            ? <span>Help</span>
-        </div>
+    <div onclick="window.location.href='/help.php'"
+        class="flex items-center gap-2 cursor-pointer transition-all duration-200
+                hover:text-teal-600 active:scale-95">
+        ? <span>Help</span>
+    </div>
     </div>
 </aside>

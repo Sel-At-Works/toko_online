@@ -85,9 +85,10 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             ⎋ <span>Sign Out</span>
         </a>
 
-        <div class="flex items-center gap-2 cursor-pointer transition-all duration-200
-                    hover:text-teal-600 active:scale-95">
-            ? <span>Help</span>
-        </div>
+    <div onclick="window.location.href='/help.php'"
+        class="flex items-center gap-2 cursor-pointer transition-all duration-200
+                hover:text-teal-600 active:scale-95">
+        ? <span>Help</span>
+    </div>
     </div>
 </aside>
