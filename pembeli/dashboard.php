@@ -10,22 +10,18 @@ if (!isset($_SESSION['user_id'])) {
 
 $nama = $_SESSION['user']['nama'] ?? 'Pembeli';
 
-// ================= AMBIL KATEGORI =================
-$queryKategori = mysqli_query($conn, "
-    SELECT id, nama_kategori, gambar
-    FROM kategori 
-    ORDER BY nama_kategori ASC
-");
+// ================= AMBIL PRODUK (SEMUA PENJUAL) =================
 $search = $_GET['search'] ?? '';
 
-$queryKategori = mysqli_query($conn, "
-    SELECT id, nama_kategori, gambar
-    FROM kategori
-    WHERE penjual_id IS NULL
-    AND nama_kategori LIKE '%$search%'
-    ORDER BY nama_kategori ASC
+$queryProduk = mysqli_query($conn, "
+    SELECT p.id, p.nama_produk, p.gambar, p.harga, u.nama AS nama_penjual
+    FROM produk p
+    JOIN users u ON p.penjual_id = u.id
+    WHERE u.role_id = 2
+    AND p.nama_produk LIKE '%$search%'
+    ORDER BY p.created_at DESC
+    LIMIT 8
 ");
-
 ?>
 
 <!DOCTYPE html>
@@ -92,40 +88,80 @@ $queryKategori = mysqli_query($conn, "
 
         <!-- BOOK LIST HEADER -->
         <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold">Your Book</h3>
-            <a href="kategori.php"
-               class="bg-teal-500 text-white px-4 py-1 rounded-full text-sm hover:bg-teal-600 transition">
-                See All
-            </a>
+        <h3 class="text-xl font-semibold">Produk Terbaru</h3>
+        <a href="produk.php"
+        class="bg-teal-500 text-white px-4 py-1 rounded-full text-sm hover:bg-teal-600 transition">
+            Lihat Semua Produk
+        </a>
         </div>
 
         <!-- BOOK LIST -->
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
 
-            <?php if (mysqli_num_rows($queryKategori) > 0): ?>
-                <?php while ($kat = mysqli_fetch_assoc($queryKategori)): ?>
+            <?php if (mysqli_num_rows($queryProduk) > 0): ?>    
+                <?php while ($p = mysqli_fetch_assoc($queryProduk)): ?>
 
-                    <div class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+<div class="group bg-white rounded-3xl shadow-sm 
+            hover:shadow-2xl transition-all duration-300
+            border border-gray-100 overflow-hidden
+            hover:-translate-y-2">
 
-                        <!-- GAMBAR -->
-                        <div class="h-40 bg-gray-100 flex items-center justify-center p-3">
-                            <?php if (!empty($kat['gambar'])): ?>
-                                <img src="../uploads/kategori/<?= htmlspecialchars($kat['gambar']); ?>"
-                                     class="max-h-full max-w-full object-contain"
-                                     alt="<?= htmlspecialchars($kat['nama_kategori']); ?>">
-                            <?php else: ?>
-                                <span class="text-gray-400 text-sm">No Image</span>
-                            <?php endif; ?>
-                        </div>
+    <!-- IMAGE -->
+    <div class="relative h-44 bg-gradient-to-br from-gray-50 to-gray-100 
+                flex items-center justify-center overflow-hidden">
 
-                        <!-- NAMA -->
-                        <div class="p-3 text-center border-t">
-                            <p class="font-semibold text-gray-700">
-                                <?= htmlspecialchars($kat['nama_kategori']); ?>
-                            </p>
-                        </div>
+        <?php if (!empty($p['gambar'])): ?>
+            <img src="../uploads/<?= htmlspecialchars($p['gambar']); ?>"
+                 class="max-h-full max-w-full object-contain
+                        transition-transform duration-500
+                        group-hover:scale-110">
+        <?php else: ?>
+            <span class="text-gray-400 text-sm">No Image</span>
+        <?php endif; ?>
 
-                    </div>
+        <!-- BADGE BARU -->
+        <span class="absolute top-3 left-3 
+                     bg-teal-500 text-white text-xs font-bold 
+                     px-3 py-1 rounded-full shadow">
+            NEW
+        </span>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="p-4 text-center">
+
+        <h3 class="font-semibold text-gray-800 
+                   line-clamp-2 min-h-[48px]">
+            <?= htmlspecialchars($p['nama_produk']); ?>
+        </h3>
+
+        <p class="text-xs text-gray-500 mt-1">
+            <?= htmlspecialchars($p['nama_penjual']); ?>
+        </p>
+
+        <p class="text-teal-600 font-extrabold text-lg mt-2">
+            Rp <?= number_format($p['harga'], 0, ',', '.'); ?>
+        </p>
+
+        <!-- ACTION -->
+        <div class="mt-4 flex justify-center gap-2 opacity-0 
+                    group-hover:opacity-100 transition-all duration-300">
+
+            <a href="detail_produk.php?id=<?= $p['id'] ?>"
+               class="px-3 py-1.5 text-xs font-semibold rounded-full 
+                      bg-blue-500 text-white hover:bg-blue-600 transition">
+                👁️ Detail
+            </a>
+
+            <a href="keranjang_tambah.php?id=<?= $p['id'] ?>"
+               class="px-3 py-1.5 text-xs font-semibold rounded-full 
+                      bg-teal-500 text-white hover:bg-teal-600 transition">
+                🛒 Keranjang
+            </a>
+        </div>
+
+    </div>
+</div>
 
                 <?php endwhile; ?>
             <?php else: ?>

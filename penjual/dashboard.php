@@ -46,11 +46,12 @@ $tanggal = date('d');
 $bulan  = $bulanIndo[date('F')];
 $tahun  = date('Y');
 
-// ambil kategori (misalnya dibatasi 5)
-$queryKategori = mysqli_query($conn, "
-    SELECT * FROM kategori
-    ORDER BY id DESC
-    LIMIT 4 
+$queryProduk = mysqli_query($conn, "
+    SELECT p.*
+    FROM produk p
+    WHERE p.penjual_id = $user_id
+    ORDER BY p.id DESC
+    LIMIT 4
 ");
 ?>
 
@@ -135,33 +136,69 @@ $queryKategori = mysqli_query($conn, "
         <!-- BOOK LIST -->
        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
 
-  <?php if (mysqli_num_rows($queryKategori) > 0): ?>
-    <?php while ($kat = mysqli_fetch_assoc($queryKategori)): ?>
+      <?php if (mysqli_num_rows($queryProduk) > 0): ?>
+        <?php while ($p = mysqli_fetch_assoc($queryProduk)): ?>
 
-      <div class="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden">
+<div class="group bg-white rounded-3xl shadow-sm 
+            hover:shadow-2xl transition-all duration-300
+            border border-gray-100 overflow-hidden
+            hover:-translate-y-2">
 
-        <!-- GAMBAR (AMAN UNTUK PERSEGI & LANDSCAPE) -->
-        <div class="h-40 bg-gray-100 flex items-center justify-center p-3">
+  <!-- IMAGE -->
+  <div class="relative h-44 bg-gradient-to-br from-gray-50 to-gray-100 
+              flex items-center justify-center overflow-hidden">
 
-          <?php if (!empty($kat['gambar'])): ?>
-            <img
-              src="../uploads/kategori/<?= htmlspecialchars($kat['gambar']); ?>"
-              class="max-h-full max-w-full object-contain"
-              alt="<?= htmlspecialchars($kat['nama_kategori']); ?>">
-          <?php else: ?>
-            <span class="text-gray-400 text-sm">No Image</span>
-          <?php endif; ?>
+    <?php if (!empty($p['gambar'])): ?>
+      <img
+        src="../uploads/<?= htmlspecialchars($p['gambar']); ?>"
+        class="max-h-full max-w-full object-contain
+               transition-transform duration-500
+               group-hover:scale-110"
+        alt="<?= htmlspecialchars($p['nama_produk']); ?>">
+    <?php else: ?>
+      <span class="text-gray-400 text-sm">No Image</span>
+    <?php endif; ?>
 
-        </div>
+    <!-- BADGE -->
+    <span class="absolute top-3 left-3 
+                 bg-teal-500 text-white text-xs font-bold 
+                 px-3 py-1 rounded-full shadow">
+      PRODUK
+    </span>
+  </div>
 
-        <!-- NAMA KATEGORI -->
-        <div class="p-3 text-center border-t">
-          <p class="font-semibold text-gray-700">
-            <?= htmlspecialchars($kat['nama_kategori']); ?>
-          </p>
-        </div>
+  <!-- CONTENT -->
+  <div class="p-4 text-center">
 
-      </div>
+    <h3 class="font-semibold text-gray-800 
+               line-clamp-2 min-h-[48px]">
+      <?= htmlspecialchars($p['nama_produk']); ?>
+    </h3>
+
+    <p class="text-teal-600 font-extrabold text-lg mt-2">
+      Rp <?= number_format($p['harga'],0,',','.'); ?>
+    </p>
+
+    <!-- ACTION -->
+    <div class="mt-4 flex justify-center gap-2 opacity-0 
+                group-hover:opacity-100 transition-all duration-300">
+
+      <a href="edit_produk.php?id=<?= $p['id'] ?>"
+         class="px-3 py-1.5 text-xs font-semibold rounded-full 
+                bg-blue-500 text-white hover:bg-blue-600 transition">
+        ✏️ Edit
+      </a>
+
+      <a href="hapus_produk.php?id=<?= $p['id'] ?>"
+         onclick="return confirm('Yakin hapus produk ini?')"
+         class="px-3 py-1.5 text-xs font-semibold rounded-full 
+                bg-red-500 text-white hover:bg-red-600 transition">
+        🗑 Hapus
+      </a>
+    </div>
+
+  </div>
+</div>
 
     <?php endwhile; ?>
   <?php else: ?>
