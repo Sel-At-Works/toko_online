@@ -218,6 +218,22 @@ function toggleMetode(id) {
     const qris = document.getElementById('qris-box-' + id);
     if (qris) qris.style.display = transfer ? 'none' : 'block';
 }
+/* ================= VALIDASI UPLOAD ================= */
+document.querySelector('form').addEventListener('submit', function(e) {
+    const inputs = document.querySelectorAll('input[type="file"]');
+    let belumUpload = false;
+
+    inputs.forEach(input => {
+        if (!input.files || input.files.length === 0) {
+            belumUpload = true;
+        }
+    });
+
+    if (belumUpload) {
+        e.preventDefault(); // stop submit
+        alert("⚠️ Silakan upload bukti pembayaran untuk semua penjual sebelum melanjutkan checkout!");
+    }
+});
 </script>
 
 </body>
