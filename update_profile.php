@@ -38,12 +38,27 @@ if ($role === 'pembeli') {
         die('Nomor telepon tidak valid');
     }
 
-    // UPDATE (BUKAN INSERT)
-    mysqli_query($conn, "
-        UPDATE pembeli_profile
-        SET no_telepon = '$no_telepon'
-        WHERE user_id = $id
+    // CEK APAKAH SUDAH ADA DATA
+    $cek = mysqli_query($conn, "
+        SELECT id FROM pembeli_profile 
+        WHERE user_id = $id 
+        LIMIT 1
     ");
+
+    if (mysqli_num_rows($cek) > 0) {
+        // UPDATE
+        mysqli_query($conn, "
+            UPDATE pembeli_profile
+            SET no_telepon = '$no_telepon'
+            WHERE user_id = $id
+        ");
+    } else {
+        // INSERT
+        mysqli_query($conn, "
+            INSERT INTO pembeli_profile (user_id, no_telepon)
+            VALUES ($id, '$no_telepon')
+        ");
+    }
 }
 
 /* ================= UPLOAD FOTO ================= */

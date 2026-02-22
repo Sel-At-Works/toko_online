@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ");
     }
 
-    header("Location: dashboard.php");
+    header("Location: ../profile.php");
     exit;
 }
 ?>
@@ -186,7 +186,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- ACTION -->
         <div class="flex items-center justify-between pt-6">
-            <a href="dashboard.php"
+            <a href="../profile.php"
                class="text-gray-500 hover:text-teal-600 font-medium">
                 ← Kembali
             </a>

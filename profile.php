@@ -50,7 +50,14 @@ switch ($user['role']) {
 }
 
 /* ================== FOTO PROFILE ================== */
-$foto = !empty($user['foto']) ? $baseUrl . $user['foto'] : null;
+$foto = null;
+
+if (!empty($user['foto'])) {
+    $path = $user['foto']; // path asli (tanpa baseUrl)
+    if (file_exists($path)) {
+        $foto = $baseUrl . $path;
+    }
+}
 
 /* ===== INISIAL USER ===== */
 $nama = trim($user['nama']);

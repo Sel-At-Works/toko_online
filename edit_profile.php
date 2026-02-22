@@ -32,10 +32,23 @@ if ($user['role'] === 'pembeli') {
     }
 }
 
+/* ================= INISIAL NAMA ================= */
+$nama = trim($user['nama']);
+$inisial = '';
+
+if ($nama !== '') {
+    $parts = explode(' ', $nama);
+    if (count($parts) >= 2) {
+        $inisial = strtoupper(substr($parts[0], 0, 1) . substr($parts[1], 0, 1));
+    } else {
+        $inisial = strtoupper(substr($parts[0], 0, 2));
+    }
+}
+
 /* ================= FOTO ================= */
-$foto = !empty($user['foto'])
+$foto = !empty($user['foto']) && file_exists($user['foto'])
     ? $user['foto']
-    : 'uploads/profile/default.png';
+    : null; // NULL kalau tidak ada foto
 ?>
 
 <!DOCTYPE html>
@@ -61,10 +74,24 @@ $foto = !empty($user['foto'])
             flex flex-col items-center justify-center gap-4 text-center">
 
     <div class="relative group">
-        <img src="<?= htmlspecialchars($foto); ?>"
-             class="w-32 h-32 rounded-full object-cover
-                    border-4 border-white shadow-lg bg-white"
-             alt="Foto Profile">
+<?php if ($foto): ?>
+
+    <!-- FOTO ASLI -->
+    <img src="<?= htmlspecialchars($foto) ?>"
+         class="w-32 h-32 rounded-full border-4 border-white shadow-lg
+                object-cover bg-white"
+         alt="Foto Profile">
+
+        <?php else: ?>
+
+            <!-- INISIAL -->
+            <div class="w-32 h-32 rounded-full border-4 border-white shadow-lg
+                        bg-white flex items-center justify-center
+                        text-3xl font-extrabold text-teal-600">
+                <?= $inisial ?>
+            </div>
+
+        <?php endif; ?>
 
         <label class="absolute inset-0 rounded-full bg-black/40
                       opacity-0 group-hover:opacity-100
