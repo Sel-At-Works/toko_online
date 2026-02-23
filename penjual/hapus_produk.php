@@ -2,12 +2,6 @@
 session_start();
 include '../config/koneksi.php';
 
-// ================= CEK LOGIN =================
-if (!isset($_SESSION['user_id'])) {
-    header("Location: ../login.php");
-    exit;
-}
-
 $penjual_id = intval($_SESSION['user_id']);
 $id = intval($_GET['id'] ?? 0);
 
@@ -44,17 +38,10 @@ if ($produk['stok'] > 0) {
     exit;
 }
 
-// ================= HAPUS GAMBAR (JIKA ADA) =================
-if (!empty($produk['gambar'])) {
-    $file = "../uploads/" . $produk['gambar'];
-    if (file_exists($file)) {
-        unlink($file);
-    }
-}
-
-// ================= HAPUS PRODUK =================
+// ================= SOFT DELETE =================
 mysqli_query($conn, "
-    DELETE FROM produk 
+    UPDATE produk 
+    SET is_active = 0
     WHERE id = $id 
       AND penjual_id = $penjual_id
 ");
@@ -62,3 +49,4 @@ mysqli_query($conn, "
 // ================= REDIRECT =================
 header("Location: produk.php?hapus=1");
 exit;
+?>

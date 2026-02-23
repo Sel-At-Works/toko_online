@@ -50,6 +50,7 @@ $queryProduk = mysqli_query($conn, "
     SELECT p.*
     FROM produk p
     WHERE p.penjual_id = $user_id
+        AND p.is_active = 1
     ORDER BY p.id DESC
     LIMIT 4
 ");
@@ -127,7 +128,7 @@ $queryProduk = mysqli_query($conn, "
         <!-- BOOK LIST -->
         <div class="flex justify-between items-center mb-4">
           <h3 class="text-xl font-semibold">Your Book</h3>
-          <a href="kategori.php"
+          <a href="produk.php"
             class="bg-teal-500 text-white px-4 py-1 rounded-full text-sm hover:bg-teal-600 transition">
             See All
           </a>

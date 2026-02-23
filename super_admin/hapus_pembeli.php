@@ -14,75 +14,41 @@ if (!isset($_SESSION['user'])) {
 $id = $_GET['id'] ?? null;
 
 if (!$id) {
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'ID pembeli tidak ditemukan'
-        });
-    </script>";
-    exit;
+    die('ID pembeli tidak ditemukan');
 }
 
 // ambil data pembeli
 $get = mysqli_query($conn, "
-    SELECT foto 
+    SELECT foto, status_login 
     FROM users 
     WHERE id='$id' AND role_id=3
 ");
 
 if (!$get || mysqli_num_rows($get) == 0) {
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'Data pembeli tidak ditemukan'
-        });
-    </script>";
-    exit;
+    die('Data pembeli tidak ditemukan');
 }
 
 $data = mysqli_fetch_assoc($get);
 
-// hapus data pembeli
+// Cek jika user sedang online
+if ($data['status_login'] === 'online') {
+    die('ONLINE');
+}
+
+// Cek jika user sendiri
+if ($id == $_SESSION['user_id']) {
+    die('SELF');
+}
+
+// Ganti DELETE dengan soft delete (is_active = 0)
 $hapus = mysqli_query($conn, "
-    DELETE FROM users 
+    UPDATE users 
+    SET is_active = 0 
     WHERE id='$id' AND role_id=3
 ");
 
 if ($hapus) {
-
-    // hapus foto jika ada
-    if (!empty($data['foto'])) {
-        $path = $_SERVER['DOCUMENT_ROOT'] . '/toko_online/' . $data['foto'];
-        if (file_exists($path)) {
-            unlink($path);
-        }
-    }
-
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: 'Data pembeli berhasil dihapus',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    </script>";
+    echo 'OK'; // JS akan tangani notifikasi
 } else {
-    echo "
-    <script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Gagal!',
-            text: 'Query gagal dijalankan'
-        });
-    </script>";
+    echo 'FAILED';
 }

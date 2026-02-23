@@ -39,8 +39,9 @@ $query = mysqli_query($conn, "
     SELECT p.*
     FROM produk p
     WHERE p.penjual_id = $penjual_id
-    $where_kategori
-    $where_search
+      AND p.is_active = 1
+      $where_kategori
+      $where_search
     ORDER BY p.created_at DESC
 ");
 

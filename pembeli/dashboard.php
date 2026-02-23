@@ -18,7 +18,8 @@ $queryProduk = mysqli_query($conn, "
     FROM produk p
     JOIN users u ON p.penjual_id = u.id
     WHERE u.role_id = 2
-    AND p.nama_produk LIKE '%$search%'
+      AND p.is_active = 1
+      AND p.nama_produk LIKE '%$search%'
     ORDER BY p.created_at DESC
     LIMIT 8
 ");
@@ -26,6 +27,7 @@ $queryProduk = mysqli_query($conn, "
 
 <!DOCTYPE html>
 <html lang="id">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <head>
     <meta charset="UTF-8">
     <title>Dashboard</title>
@@ -180,6 +182,29 @@ $queryProduk = mysqli_query($conn, "
     </main>
 
 </div>
+<script>
+document.querySelectorAll('a[href^="keranjang_tambah.php"]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault(); // cegah link langsung
 
+        const url = this.href; // simpan URL untuk dituju
+        const namaProduk = this.closest('.group').querySelector('h3').innerText;
+
+        Swal.fire({
+            title: 'Masukkan ke keranjang?',
+            text: `Apakah Anda ingin menambahkan "${namaProduk}" ke keranjang?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya',
+            cancelButtonText: 'Tidak'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Jika pilih "Ya", lanjut ke URL keranjang
+                window.location.href = url;
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>

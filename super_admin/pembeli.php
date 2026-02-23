@@ -31,7 +31,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'status') {
 $query = mysqli_query($conn, "
     SELECT * 
     FROM users 
-    WHERE role_id = 3
+    WHERE role_id = 3 AND is_active = 1
 ");
 ?>
 

@@ -37,7 +37,7 @@ $query = mysqli_query($conn, "
     SELECT p.*
     FROM produk p
     INNER JOIN kategori k ON p.kategori_id = k.id
-    WHERE 1=1
+    WHERE p.is_active = 1
     $where_kategori
     $where_search
     ORDER BY p.created_at DESC
