@@ -12,11 +12,10 @@ $pembeli_id = intval($_SESSION['user_id']);
 $start = $_GET['start'] ?? '';
 $end   = $_GET['end'] ?? '';
 
-$filter = "WHERE t.pembeli_id = $pembeli_id 
-           AND t.status = 'selesai' ";
+$filter = "WHERE t.pembeli_id = $pembeli_id";
 
 if ($start && $end) {
-    $filter .= " AND t.created_at BETWEEN '$start 00:00:00' AND '$end 23:59:59' ";
+    $filter .= " AND t.created_at BETWEEN '$start 00:00:00' AND '$end 23:59:59'";
 }
 
 // Ambil transaksi pembeli
@@ -29,35 +28,45 @@ $transaksiQ = mysqli_query($conn, "
 
 $totalBelanja = 0;
 $jumlahTransaksi = 0;
-
 $transaksiList = [];
 $grafikData = [];
 
 while ($t = mysqli_fetch_assoc($transaksiQ)) {
-    $jumlahTransaksi++;
-    $totalBelanja += $t['total'];
-
+    // Ambil produk non-refund
     $detailQ = mysqli_query($conn, "
         SELECT d.qty, p.nama_produk, d.harga
         FROM transaksi_detail d
         JOIN produk p ON d.produk_id = p.id
+        LEFT JOIN transaksi_penjual tp 
+          ON tp.transaksi_id = d.transaksi_id
+          AND tp.penjual_id = p.penjual_id
         WHERE d.transaksi_id = {$t['id']}
+        AND (tp.status IS NULL OR tp.status != 'refund')
     ");
 
     $produk = [];
+    $totalTransaksi = 0;
     while($d = mysqli_fetch_assoc($detailQ)){
         $produk[] = $d;
+        $totalTransaksi += $d['qty'] * $d['harga'];
     }
+
+    // Lewati transaksi jika semua produk di-refund
+    if (count($produk) === 0) continue;
+
+    $jumlahTransaksi++;
+    $totalBelanja += $totalTransaksi;
 
     $transaksiList[] = [
         'kode' => $t['kode_invoice'],
         'tanggal' => $t['created_at'],
-        'total' => $t['total'],
+        'total' => $totalTransaksi,
         'produk' => $produk
     ];
+
     $tgl = date('Y-m-d', strtotime($t['created_at']));
     if (!isset($grafikData[$tgl])) $grafikData[$tgl] = 0;
-    $grafikData[$tgl] += $t['total'];
+    $grafikData[$tgl] += $totalTransaksi;
 }
 ?>
 

@@ -12,17 +12,17 @@ $start = $_GET['start'] ?? '';
 $end   = $_GET['end'] ?? '';
 
 $filter = "WHERE tp.penjual_id = $penjual_id 
-           AND t.status IN ('dikirim','selesai') ";
+           AND tp.approve = 'setuju' "; // hanya setuju
 if ($start && $end) {
-    $filter .= " AND t.created_at BETWEEN '$start 00:00:00' AND '$end 23:59:59' ";
+    $filter .= " AND tp.updated_at BETWEEN '$start 00:00:00' AND '$end 23:59:59' ";
 }
 
 $transaksiQ = mysqli_query($conn, "
-    SELECT t.id, t.pembeli_id, t.total, t.created_at
-    FROM transaksi t
-    JOIN transaksi_penjual tp ON tp.transaksi_id = t.id
+    SELECT tp.id as tp_id, tp.transaksi_id, tp.total, tp.updated_at, t.pembeli_id
+    FROM transaksi_penjual tp
+    JOIN transaksi t ON t.id = tp.transaksi_id
     $filter
-    ORDER BY t.created_at DESC
+    ORDER BY tp.updated_at DESC
 ");
 
 $transaksiList = [];
@@ -30,15 +30,16 @@ $grafikData = [];
 $totalKeuntungan = 0;
 
 while ($t = mysqli_fetch_assoc($transaksiQ)) {
-    $kode = 'INV-' . date('Ymd', strtotime($t['created_at'])) . '-' . $t['id'];
+    // Gunakan updated_at dan tp_id / transaksi_id
+    $kode = 'INV-' . date('Ymd', strtotime($t['updated_at'])) . '-' . $t['transaksi_id'];
 
-    $detailQ = mysqli_query($conn, "
-        SELECT d.qty, p.nama_produk, p.harga_modal, p.harga
-        FROM transaksi_detail d
-        JOIN produk p ON d.produk_id = p.id
-        JOIN transaksi_penjual tp ON tp.transaksi_id = d.transaksi_id
-        WHERE d.transaksi_id = {$t['id']} AND tp.penjual_id = $penjual_id
-    ");
+$detailQ = mysqli_query($conn, "
+    SELECT d.qty, p.nama_produk, p.harga_modal, p.harga
+    FROM transaksi_detail d
+    JOIN produk p ON d.produk_id = p.id
+    WHERE d.transaksi_id = {$t['transaksi_id']}
+      AND p.penjual_id = $penjual_id
+");
 
     $transaksiProduk = [];
     while ($d = mysqli_fetch_assoc($detailQ)) {
@@ -52,13 +53,13 @@ while ($t = mysqli_fetch_assoc($transaksiQ)) {
             'keuntungan' => $keuntungan
         ];
 
-        $tgl = date('Y-m-d', strtotime($t['created_at']));
+        $tgl = date('Y-m-d', strtotime($t['updated_at']));
         if (!isset($grafikData[$tgl])) $grafikData[$tgl] = 0;
         $grafikData[$tgl] += $keuntungan;
     }
 
     $transaksiList[] = [
-        'tanggal' => $t['created_at'],
+        'tanggal' => $t['updated_at'],
         'kode' => $kode,
         'produk' => $transaksiProduk
     ];
