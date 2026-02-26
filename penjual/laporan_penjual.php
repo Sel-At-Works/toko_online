@@ -408,12 +408,66 @@ function showGrafik(type){
 
 <script>
 /* ======================
-   DOWNLOAD PDF
+   DOWNLOAD PDF (GRAFIK DI HALAMAN PERTAMA)
 ====================== */
 document.getElementById('downloadPdf').addEventListener('click', async () => {
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF('l', 'pt', 'a4'); // landscape
+
+    /* ===== DETEKSI GRAFIK AKTIF ===== */
+    let activeCanvas = null;
+
+    if(!document.getElementById('wrap-garis').classList.contains('hidden')){
+        activeCanvas = document.getElementById('grafikGaris');
+    }
+
+    if(!document.getElementById('wrap-batang').classList.contains('hidden')){
+        activeCanvas = document.getElementById('grafikBatang');
+    }
+
+    if(!document.getElementById('wrap-pie').classList.contains('hidden')){
+        activeCanvas = document.getElementById('grafikPie');
+    }
+
+    /* ======================
+       HALAMAN 1 → GRAFIK
+    ====================== */
+    if(activeCanvas){
+        const imgData = activeCanvas.toDataURL('image/png', 1.0);
+
+        doc.setFontSize(18);
+        doc.text("Grafik Penjualan", 40, 40);
+
+        // ukuran canvas
+        const canvasWidth  = activeCanvas.width;
+        const canvasHeight = activeCanvas.height;
+
+        const ratio = canvasWidth / canvasHeight;
+
+        const maxWidth = 720;
+        const maxHeight = 360;
+
+        let pdfWidth = maxWidth;
+        let pdfHeight = pdfWidth / ratio;
+
+        if (pdfHeight > maxHeight) {
+            pdfHeight = maxHeight;
+            pdfWidth = pdfHeight * ratio;
+        }
+
+        const pageWidth  = doc.internal.pageSize.getWidth();
+        const centerX = (pageWidth - pdfWidth) / 2;
+
+        const startY = 80;
+
+        doc.addImage(imgData, 'PNG', centerX, startY, pdfWidth, pdfHeight);
+    }
+
+    /* ======================
+       HALAMAN 2 → LAPORAN
+    ====================== */
+    doc.addPage();
 
     /* ===== TITLE ===== */
     doc.setFontSize(18);
@@ -422,7 +476,11 @@ document.getElementById('downloadPdf').addEventListener('click', async () => {
     /* ===== SUBTITLE ===== */
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text("Periode: <?= $start && $end ? date('d M Y', strtotime($start)).' - '.date('d M Y', strtotime($end)) : 'Semua Data' ?>", 40, 60);
+    doc.text(
+        "Periode: <?= $start && $end ? date('d M Y', strtotime($start)).' - '.date('d M Y', strtotime($end)) : 'Semua Data' ?>",
+        40,
+        60
+    );
 
     /* ===== TABLE ===== */
     const table = document.querySelector('#laporanTable table');
@@ -447,66 +505,8 @@ document.getElementById('downloadPdf').addEventListener('click', async () => {
         finalY + 25
     );
 
-    /* ===== DETEKSI GRAFIK AKTIF ===== */
-    let activeCanvas = null;
+    /* ===== SAVE ===== */
+    doc.save('laporan_penjual.pdf');
 
-    if(!document.getElementById('wrap-garis').classList.contains('hidden')){
-        activeCanvas = document.getElementById('grafikGaris');
-    }
-
-    if(!document.getElementById('wrap-batang').classList.contains('hidden')){
-        activeCanvas = document.getElementById('grafikBatang');
-    }
-
-    if(!document.getElementById('wrap-pie').classList.contains('hidden')){
-        activeCanvas = document.getElementById('grafikPie');
-    }
-
-    /* ===== TAMBAH HALAMAN GRAFIK ===== */
-    if(activeCanvas){
-        const imgData = activeCanvas.toDataURL('image/png', 1.0);
-
-        doc.addPage();
-        doc.setFontSize(16);
-        doc.setTextColor(0);
-        doc.text("Grafik Penjualan", 40, 40);
-
-        // ambil ukuran asli canvas
-        const canvasWidth  = activeCanvas.width;
-        const canvasHeight = activeCanvas.height;
-
-        // rasio
-        const ratio = canvasWidth / canvasHeight;
-
-        // ukuran maksimum di PDF
-        const maxWidth = 720;
-        const maxHeight = 360;
-
-        let pdfWidth = maxWidth;
-        let pdfHeight = pdfWidth / ratio;
-
-        // kalau tinggi kepanjangan, sesuaikan
-        if (pdfHeight > maxHeight) {
-            pdfHeight = maxHeight;
-            pdfWidth = pdfHeight * ratio;
-        }
-
-        // ukuran halaman PDF
-        const pageWidth  = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-
-        // posisi center horizontal
-        const centerX = (pageWidth - pdfWidth) / 2;
-
-        // posisi Y (bisa fixed / auto center vertical)
-        const startY = 80; // atas manual
-        // const centerY = (pageHeight - pdfHeight) / 2; // kalau mau center vertical
-
-        doc.addImage(imgData, 'PNG', centerX, startY, pdfWidth, pdfHeight);
-            }
-
-            /* ===== SAVE ===== */
-            doc.save('laporan_penjual.pdf');
-
-        });
+});
 </script>
