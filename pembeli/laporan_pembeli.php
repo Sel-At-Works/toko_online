@@ -206,17 +206,17 @@ while ($t = mysqli_fetch_assoc($transaksiQ)) {
             </div>
         </div>
     <!-- GRAFIK CARD -->
-    <div class="bg-white rounded-2xl shadow-xl p-6 mt-8">
+    <!-- <div class="bg-white rounded-2xl shadow-xl p-6 mt-8">
         <h2 class="text-xl font-bold text-indigo-700 mb-4">📈 Grafik Belanja</h2>
         <div class="bg-slate-50 rounded-xl p-4">
             <canvas id="grafikBelanja"></canvas>
         </div>
-    </div>
+    </div> -->
     </main>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script>
+<!-- <script>
 const labels = <?= json_encode(array_keys($grafikData)) ?>;
 const data = <?= json_encode(array_values($grafikData)) ?>;
 
@@ -250,7 +250,7 @@ new Chart(ctx, {
         }
     }
 });
-</script>
+</script> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -287,14 +287,14 @@ document.getElementById('btnPdf').addEventListener('click', () => {
     doc.text(`Periode         : <?= $start && $end ? date('d M Y', strtotime($start))." - ".date('d M Y', strtotime($end)) : 'Semua Data' ?>`, 40, finalY + 65);
 
     // ===== GRAFIK (HALAMAN 2) =====
-    const canvas = document.getElementById('grafikBelanja');
-    const chartImg = canvas.toDataURL('image/png', 1.0);
+    // const canvas = document.getElementById('grafikBelanja');
+    // const chartImg = canvas.toDataURL('image/png', 1.0);
 
-    doc.addPage();
-    doc.setFontSize(16);
-    doc.setTextColor(0,0,0);
-    doc.text("Grafik Belanja per Tanggal", 40, 40);
-    doc.addImage(chartImg, 'PNG', 40, 70, 700, 300);
+    // doc.addPage();
+    // doc.setFontSize(16);
+    // doc.setTextColor(0,0,0);
+    // doc.text("Grafik Belanja per Tanggal", 40, 40);
+    // doc.addImage(chartImg, 'PNG', 40, 70, 700, 300);
 
     // ===== SAVE =====
     doc.save('laporan_pembeli.pdf');

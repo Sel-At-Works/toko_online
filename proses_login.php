@@ -24,6 +24,15 @@ if (!$user) {
     exit;
 }
 
+// ✅ CEK ONLINE
+if ($user['status_login'] === 'online') {
+    echo "<script>
+        alert('Akun ini sedang login di perangkat lain!');
+        window.location='login.php';
+    </script>";
+    exit;
+}
+
 if (!password_verify($password, $user['password'])) {
     echo "<script>alert('Password salah'); window.location='login.php';</script>";
     exit;
