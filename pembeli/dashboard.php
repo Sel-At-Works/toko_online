@@ -14,7 +14,9 @@ $nama = $_SESSION['user']['nama'] ?? 'Pembeli';
 $search = $_GET['search'] ?? '';
 
 $queryProduk = mysqli_query($conn, "
-    SELECT p.id, p.nama_produk, p.gambar, p.harga, u.nama AS nama_penjual
+    SELECT p.id, p.nama_produk, p.gambar, p.harga, 
+           p.stok,
+           u.nama AS nama_penjual
     FROM produk p
     JOIN users u ON p.penjual_id = u.id
     WHERE u.role_id = 2
@@ -155,11 +157,18 @@ $queryProduk = mysqli_query($conn, "
                 👁️ Detail
             </a>
 
+        <?php if ($p['stok'] > 0): ?>
             <a href="keranjang_tambah.php?id=<?= $p['id'] ?>"
-               class="px-3 py-1.5 text-xs font-semibold rounded-full 
-                      bg-teal-500 text-white hover:bg-teal-600 transition">
+            class="px-3 py-1.5 text-xs font-semibold rounded-full 
+                    bg-teal-500 text-white hover:bg-teal-600 transition">
                 🛒 Keranjang
             </a>
+        <?php else: ?>
+            <span class="px-3 py-1.5 text-xs font-semibold rounded-full 
+                        bg-gray-300 text-gray-600 cursor-not-allowed">
+                Stok Habis
+            </span>
+        <?php endif; ?>
         </div>
 
     </div>
