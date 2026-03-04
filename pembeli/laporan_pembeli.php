@@ -91,41 +91,53 @@ while ($t = mysqli_fetch_assoc($transaksiQ)) {
     <main class="flex-1 p-6 overflow-y-auto">
 
         <!-- HEADER -->
-        <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 mb-6 border border-white">
-            <div class="flex flex-wrap gap-4 items-center justify-between">
+ <div class="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg p-6 mb-6 border border-white relative">
 
-                <!-- TITLE -->
-                <div>
-                    <h1 class="text-3xl font-extrabold text-indigo-700 tracking-wide">
-                        🛒 Laporan Pembelian Saya
-                    </h1>
-                    <p class="text-sm text-gray-500 mt-1">
-                        Riwayat transaksi & aktivitas belanja
-                    </p>
-                </div>
+    <!-- BARIS ATAS -->
+    <div class="flex items-start justify-between">
 
-                <!-- FILTER -->
-                <form method="GET" class="flex gap-2 items-center">
-                    <input type="date" name="start" value="<?= htmlspecialchars($start) ?>" 
-                        class="px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none">
-                    <span class="text-gray-500">—</span>
-                    <input type="date" name="end" value="<?= htmlspecialchars($end) ?>" 
-                        class="px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none">
-                    <button type="submit"
-                        class="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition">
-                        Filter
-                    </button>
-                </form>
-                <!-- PROFIL & NOTIFIKASI -->
-                  <?php include '../layouts/profil_notifikasi.php'; ?>
-
-                <!-- TOMBOL PDF -->
-                <button id="btnPdf"
-                    class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-lg hover:scale-105 transition">
-                    ⬇ Unduh PDF
-                </button>
-            </div>
+        <!-- TITLE -->
+        <div>
+            <h1 class="text-3xl font-extrabold text-indigo-700 tracking-wide">
+                🛒 Laporan Pembelian Saya
+            </h1>
+            <p class="text-sm text-gray-500 mt-1">
+                Riwayat transaksi & aktivitas belanja
+            </p>
         </div>
+
+        <!-- PROFIL & NOTIFIKASI (DIPINDAH KE ATAS KANAN) -->
+        <div class="relative z-50">
+            <?php include '../layouts/profil_notifikasi.php'; ?>
+        </div>
+
+    </div>
+
+    <!-- BARIS BAWAH -->
+    <div class="flex flex-wrap gap-4 items-center justify-between mt-6">
+
+        <!-- FILTER -->
+        <form method="GET" class="flex gap-2 items-center">
+            <input type="date" name="start" value="<?= htmlspecialchars($start) ?>" 
+                class="px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+            <span class="text-gray-500">—</span>
+            <input type="date" name="end" value="<?= htmlspecialchars($end) ?>" 
+                class="px-4 py-2 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-400 outline-none">
+            <button type="submit"
+                class="px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold shadow-lg hover:scale-105 transition">
+                Filter
+            </button>
+        </form>
+
+        <!-- TOMBOL PDF -->
+        <button id="btnPdf"
+            class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-lg hover:scale-105 transition">
+            ⬇ Unduh PDF
+        </button>
+
+    </div>
+
+</div>
 
         <!-- SUMMARY -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
