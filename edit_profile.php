@@ -134,11 +134,43 @@ $foto = !empty($user['foto']) && file_exists($user['foto'])
             <label class="block text-sm font-semibold text-gray-600 mb-1">
                 Foto Profile
             </label>
+
             <input type="file" name="foto" accept="image/*"
-                   class="w-full text-sm file:mr-4 file:py-2 file:px-4
-                          file:rounded-full file:border-0
-                          file:bg-teal-50 file:text-teal-600
-                          hover:file:bg-teal-100 cursor-pointer">
+                class="w-full text-sm file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:bg-teal-50 file:text-teal-600
+                        hover:file:bg-teal-100 cursor-pointer">
+
+        <?php if ($foto): ?>
+            <button type="submit"
+                    name="hapus_foto"
+                    value="1"
+                    onclick="return confirm('Yakin mau hapus foto?')"
+                    class="mt-3 inline-flex items-center gap-2 
+                        px-4 py-2 
+                        bg-red-50 text-red-600 
+                        rounded-xl 
+                        text-sm font-semibold
+                        border border-red-200
+                        hover:bg-red-100 hover:text-red-700
+                        hover:shadow-md
+                        transition duration-200 ease-in-out">
+                        
+                <!-- ICON TRASH -->
+                <svg xmlns="http://www.w3.org/2000/svg" 
+                    class="w-4 h-4" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor">
+                    <path stroke-linecap="round" 
+                        stroke-linejoin="round" 
+                        stroke-width="2" 
+                        d="M6 7h12M9 7V4h6v3m-9 0l1 13h8l1-13" />
+                </svg>
+
+                Hapus Foto
+            </button>
+        <?php endif; ?>
         </div>
 
         <!-- NAMA -->

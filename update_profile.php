@@ -61,6 +61,19 @@ if ($role === 'pembeli') {
     }
 }
 
+/* ================= HAPUS FOTO ================= */
+if (isset($_POST['hapus_foto']) && $_POST['hapus_foto'] == "1") {
+
+    if (!empty($_SESSION['user']['foto']) && 
+        $_SESSION['user']['foto'] !== 'uploads/profile/default.png' &&
+        file_exists($_SESSION['user']['foto'])) {
+
+        unlink($_SESSION['user']['foto']); // hapus file
+    }
+
+    $fotoPath = null; // set NULL supaya tampil inisial
+}
+
 /* ================= UPLOAD FOTO ================= */
 if (!empty($_FILES['foto']['name'])) {
 
@@ -84,7 +97,7 @@ mysqli_query($conn, "
         nama   = '$nama',
         email  = '$email',
         alamat = '$alamat',
-        foto   = '$fotoPath'
+        foto   = " . ($fotoPath ? "'$fotoPath'" : "NULL") . "
     WHERE id = $id
 ");
 
@@ -92,7 +105,7 @@ mysqli_query($conn, "
 $_SESSION['user']['nama']   = $nama;
 $_SESSION['user']['email']  = $email;
 $_SESSION['user']['alamat'] = $alamat;
-$_SESSION['user']['foto']   = $fotoPath;
+$_SESSION['user']['foto'] = $fotoPath ?? null;
 
 header("Location: profile.php");
 exit;
