@@ -41,6 +41,32 @@ VALUES ($uid, '', '', NULL)
 /* ================= PROSES SIMPAN ================= */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
+    /* ================= HAPUS QRIS ================= */
+    if (isset($_POST['hapus_qris']) && $_POST['hapus_qris'] == "1") {
+
+        $getQris = mysqli_query($conn, "
+            SELECT qris FROM penjual_profile 
+            WHERE user_id = $uid LIMIT 1
+        ");
+
+        $dataQris = mysqli_fetch_assoc($getQris);
+        $qrisLama = $dataQris['qris'] ?? null;
+
+        if ($qrisLama && file_exists("../" . $qrisLama)) {
+            unlink("../" . $qrisLama);
+        }
+
+        mysqli_query($conn, "
+            UPDATE penjual_profile 
+            SET qris = NULL 
+            WHERE user_id = $uid
+        ");
+
+        header("Location: ".$_SERVER['PHP_SELF']);
+        exit;
+    }
+
+     // ================= LANJUT PROSES SIMPAN NORMAL =================
     $bank   = mysqli_real_escape_string($conn, $_POST['bank']);
     $no_rek = mysqli_real_escape_string($conn, $_POST['no_rekening']);
 
@@ -173,13 +199,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </p>
 
     <!-- 🔽 TARUH DI SINI -->
-    <?php if (!empty($profilPenjual['qris'])): ?>
-        <div class="mt-3">
-            <p class="text-xs text-gray-500 mb-1">QRIS Saat Ini</p>
-            <img src="../<?= htmlspecialchars($profilPenjual['qris']) ?>"
-                 class="w-28 rounded-lg border shadow">
-        </div>
-    <?php endif; ?>
+<?php if (!empty($profilPenjual['qris'])): ?>
+    <div class="mt-3 space-y-2">
+        <p class="text-xs text-gray-500 mb-1">QRIS Saat Ini</p>
+
+        <img src="../<?= htmlspecialchars($profilPenjual['qris']) ?>"
+             class="w-28 rounded-lg border shadow">
+
+        <button type="submit"
+                name="hapus_qris"
+                value="1"
+                onclick="return confirm('Yakin mau hapus QRIS?')"
+                class="inline-flex items-center gap-2 
+                       px-4 py-2 
+                       bg-red-50 text-red-600 
+                       rounded-xl 
+                       text-sm font-semibold
+                       border border-red-200
+                       hover:bg-red-100 hover:text-red-700
+                       transition duration-200">
+            🗑 Hapus QRIS
+        </button>
+    </div>
+<?php endif; ?>
 
 </div>
 

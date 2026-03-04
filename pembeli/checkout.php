@@ -143,23 +143,28 @@ input[type=radio] { accent-color: #14b8a6; }
 
             <!-- METODE -->
             <div class="flex gap-4 text-sm">
+
+                <!-- TRANSFER SELALU ADA -->
                 <label class="flex-1 border rounded-xl px-4 py-3 flex gap-3 cursor-pointer">
                     <input type="radio"
-                           name="metode[<?= $penjual_id ?>]"
-                           value="transfer"
-                           checked
-                           onchange="toggleMetode(<?= $penjual_id ?>)">
+                        name="metode[<?= $penjual_id ?>]"
+                        value="transfer"
+                        checked
+                        onchange="toggleMetode(<?= $penjual_id ?>)">
                     🏦 Transfer
                 </label>
 
+                <!-- QRIS HANYA MUNCUL JIKA ADA -->
+                <?php if (!empty($p['qris'])): ?>
                 <label class="flex-1 border rounded-xl px-4 py-3 flex gap-3 cursor-pointer">
                     <input type="radio"
-                           name="metode[<?= $penjual_id ?>]"
-                           value="qris"
-                           onchange="toggleMetode(<?= $penjual_id ?>)">
+                        name="metode[<?= $penjual_id ?>]"
+                        value="qris"
+                        onchange="toggleMetode(<?= $penjual_id ?>)">
                     📱 QRIS
                 </label>
-            </div>
+                <?php endif; ?>
+                </div>
 
             <!-- BANK -->
             <div id="bank-box-<?= $penjual_id ?>" class="mt-4 bg-gray-100 p-4 rounded-xl">
