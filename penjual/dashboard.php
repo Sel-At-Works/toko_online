@@ -46,11 +46,14 @@ $tanggal = date('d');
 $bulan  = $bulanIndo[date('F')];
 $tahun  = date('Y');
 
+$search = $_GET['search'] ?? '';
+
 $queryProduk = mysqli_query($conn, "
     SELECT p.*
     FROM produk p
     WHERE p.penjual_id = $user_id
-        AND p.is_active = 1
+    AND p.is_active = 1
+    AND p.nama_produk LIKE '%$search%'
     ORDER BY p.id DESC
     LIMIT 4
 ");
@@ -85,13 +88,15 @@ $queryProduk = mysqli_query($conn, "
         <div class="flex items-center gap-4 mb-8">
 
           <!-- SEARCH -->
-          <div class="flex-1 relative">
+          <form method="GET" class="flex-1 relative">
             <input
               type="text"
-              placeholder="Search Here"
+              name="search"
+              value="<?= $_GET['search'] ?? '' ?>"
+              placeholder="Search Your Book"
               class="w-full px-12 py-3 rounded-full bg-white shadow focus:outline-none" />
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
-          </div>
+          </form>
 
           <!-- PROFILE & NOTIFICATION -->
           <?php include '../layouts/profil_notifikasi.php'; ?>
