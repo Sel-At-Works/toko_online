@@ -54,7 +54,7 @@ $queryProduk = mysqli_query($conn, "
             type="text"
             name="search"
             value="<?= htmlspecialchars($search); ?>"
-            placeholder="Cari kategori..."
+            placeholder="Cari produk"
             class="w-full px-12 py-3 rounded-full bg-white shadow focus:outline-none"
         >
         <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
