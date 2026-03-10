@@ -43,12 +43,20 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
 
 
-          <a href="../penjual/admin.php"
+          <!-- <a href="../penjual/admin.php"
    class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
    <?= $currentPage == 'admin.php'
       ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white shadow-lg scale-105'
       : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600 active:scale-95' ?>">
     Admin
+</a> -->
+
+          <a href="../penjual/pembeli.php"
+   class="block px-5 py-3 rounded-full font-semibold transition-all duration-200
+   <?= $currentPage == 'pembeli.php'
+      ? 'bg-gradient-to-r from-teal-400 to-teal-600 text-white shadow-lg scale-105'
+      : 'text-gray-500 hover:bg-gray-100 hover:text-teal-600 active:scale-95' ?>">
+    pembeli
 </a>
 
       <a href="../penjual/produk.php"

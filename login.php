@@ -1,3 +1,17 @@
+<?php
+session_start();
+
+/* jika sudah login langsung arahkan ke dashboard */
+if (isset($_SESSION['user_id'])) {
+    header("Location: penjual/dashboard.php"); 
+    exit;
+}
+
+/* mencegah cache browser */
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+?>
 <!DOCTYPE html>
 <html lang="id">
 
@@ -50,9 +64,9 @@
                     Login
                 </button>
 
-                <a href="forget_email.php" class="block text-center text-sm hover:underline">
+                <!-- <a href="forget_email.php" class="block text-center text-sm hover:underline">
                     Lupa Password
-                </a>
+                </a> -->
             </form>
 
             <p class="text-center mt-12 text-sm">
