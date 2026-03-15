@@ -192,10 +192,10 @@ $alamat = $invoice['alamat'];
            class="bg-teal-600 text-white py-2 rounded text-center font-bold">
             Kembali ke Dashboard Penjual
         </a>
-        <button onclick="window.print()"
-           class="border py-2 rounded text-center font-bold">
-           📄 Cetak Invoice
-        </button>
+        <a href="cetak_invoice_penjual.php?transaksi_id=<?= $transaksi_id ?>"
+        class="border py-2 rounded text-center font-bold">
+        📄 Download / Cetak PDF
+        </a>
     </div>
 
 </div>
