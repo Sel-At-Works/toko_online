@@ -13,7 +13,8 @@ $penjual_id = $_SESSION['user_id'];
 
 // ================== AMBIL KATEGORI ==================
 $kategori = mysqli_query($conn, "
-    SELECT * FROM kategori 
+    SELECT * FROM kategori
+    WHERE penjual_id = $penjual_id OR penjual_id IS NULL
     ORDER BY nama_kategori ASC
 ");
 
@@ -32,20 +33,20 @@ if (!empty($search)) {
 
 // ================== KATEGORI YANG DIPILIH ==================
 $kategori_id = $_GET['kategori_id'] ?? '';
-$where_kategori = $kategori_id ? "AND p.kategori_id = $kategori_id" : "";
+$where_kategori = $kategori_id ? "AND p.kategori_id = '".intval($kategori_id)."'" : "";
 
 // ================== AMBIL PRODUK ==================
 $query = mysqli_query($conn, "
     SELECT p.*
     FROM produk p
+    JOIN kategori k ON p.kategori_id = k.id
     WHERE p.penjual_id = $penjual_id
-      AND p.is_active = 1
-      $where_kategori
-      $where_search
+    AND (k.penjual_id = $penjual_id OR k.penjual_id IS NULL)
+    AND p.is_active = 1
+    $where_kategori
+    $where_search
     ORDER BY p.created_at DESC
 ");
-
-
 ?>
 
 <!DOCTYPE html>
@@ -201,21 +202,22 @@ font-extrabold text-sm
                class="p-2 rounded-full bg-white/20 hover:bg-blue-400">👁️</a>
 
             <?php if ($row['stok'] > 0): ?>
-            <!-- DISABLE DELETE -->
-            <span
-                class="p-2 rounded-full bg-white/20 opacity-40 cursor-not-allowed"
-                title="Tidak bisa dihapus, stok masih ada">
-                🗑️
-            </span>
-        <?php else: ?>
-            <!-- AKTIF DELETE -->
+
+            <a href="#"
+            onclick="alert('Produk tidak bisa dihapus karena stok masih ada'); return false;"
+            class="p-2 rounded-full bg-white/20 opacity-40 cursor-not-allowed">
+            🗑️
+            </a>
+
+            <?php else: ?>
+
             <a href="hapus_produk.php?id=<?= $row['id'] ?>"
             onclick="return confirm('Yakin ingin menghapus produk ini?')"
-            class="p-2 rounded-full bg-white/20 hover:bg-red-500"
-            title="Hapus produk">
-                🗑️
+            class="p-2 rounded-full bg-white/20 hover:bg-red-500">
+            🗑️
             </a>
-        <?php endif; ?>
+
+            <?php endif; ?>
         </div>
 
     </div>

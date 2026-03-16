@@ -10,7 +10,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user']['role'] !== 'pembeli') {
 
 // ================== AMBIL KATEGORI ==================
 $kategori = mysqli_query($conn, "
-    SELECT * FROM kategori
+    SELECT MIN(id) as id, nama_kategori
+    FROM kategori
+    GROUP BY nama_kategori
     ORDER BY nama_kategori ASC
 ");
 
@@ -28,8 +30,10 @@ if (!empty($search)) {
 }
 
 // ================== KATEGORI YANG DIPILIH ==================
-$kategori_id = $_GET['kategori_id'] ?? '';
-$where_kategori = $kategori_id ? "AND p.kategori_id = $kategori_id" : "";
+$kategori_nama = $_GET['kategori'] ?? '';
+$where_kategori = $kategori_nama 
+    ? "AND k.nama_kategori = '$kategori_nama'" 
+    : "";
 
 
 // ================== AMBIL PRODUK (KHUSUS PEMBELI) ==================
@@ -105,11 +109,11 @@ $query = mysqli_query($conn, "
             </a>
 
             <?php while ($kat = mysqli_fetch_assoc($kategori)) { ?>
-                <a href="produk.php?kategori_id=<?= $kat['id'] ?>"
-                   class="px-5 py-2 rounded-full border
-                   <?= ($kategori_id == $kat['id']) ? 'bg-teal-500 text-white' : 'bg-white text-gray-700' ?>">
-                   <?= $kat['nama_kategori'] ?>
-                </a>
+            <a href="produk.php?kategori=<?= urlencode($kat['nama_kategori']) ?>"
+            class="px-5 py-2 rounded-full border
+            <?= ($kategori_nama == $kat['nama_kategori']) ? 'bg-teal-500 text-white' : 'bg-white text-gray-700' ?>">
+            <?= htmlspecialchars($kat['nama_kategori']) ?>
+            </a>
             <?php } ?>
         </div>
 

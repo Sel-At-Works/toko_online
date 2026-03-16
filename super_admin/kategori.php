@@ -179,20 +179,40 @@ if (!$kategori) {
         // Cek apakah kategori sudah dipakai di produk
         $cek_produk = mysqli_query($conn, "SELECT id FROM produk WHERE kategori_id = ".$row['id']." LIMIT 1");
         $kategori_dipakai = mysqli_num_rows($cek_produk) > 0;
+        ?>
 
-        if ($kategori_dipakai): ?>
-            <!-- Tombol disabled karena kategori sudah dipakai -->
-            <button class="p-2 rounded-full bg-yellow-300 text-gray-500 cursor-not-allowed" disabled>✏️</button>
-            <button class="p-2 rounded-full bg-red-300 text-gray-500 cursor-not-allowed" disabled>🗑️</button>
-        <?php else: ?>
-            <!-- Tombol aktif karena kategori belum dipakai -->
-            <a href="edit_kategori.php?id=<?= $row['id']; ?>"
-               class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
+<td class="py-3">
+<div class="flex justify-center gap-5">
 
-            <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
-               onclick="return confirm('Yakin ingin menghapus kategori ini?')"
-               class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
-        <?php endif; ?>
+<?php 
+$cek_produk = mysqli_query($conn, "SELECT id FROM produk WHERE kategori_id=".(int)$row['id']." LIMIT 1");
+$kategori_dipakai = mysqli_num_rows($cek_produk) > 0;
+?>
+
+<!-- EDIT -->
+<a href="edit_kategori.php?id=<?= $row['id']; ?>"
+onclick="<?php
+if ($kategori_dipakai) {
+    echo "alert('Kategori sedang dipakai produk, tidak bisa diedit'); return false;";
+}
+?>"
+class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
+
+<!-- HAPUS -->
+<a href="hapus_kategori.php?id=<?= $row['id']; ?>"
+onclick="<?php
+if ($kategori_dipakai) {
+    echo "alert('Kategori sedang dipakai produk, tidak bisa dihapus'); return false;";
+}
+echo "return confirm('Yakin ingin menghapus kategori ini?')";
+?>"
+class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
+
+</div>
+</td>
+
+</div>
+</td>
     </div>
 </td>
 

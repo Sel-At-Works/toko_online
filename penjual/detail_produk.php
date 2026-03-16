@@ -141,21 +141,19 @@ $margin_persen = ($produk['harga_modal'] > 0)
 
                     <?php if ($produk['stok'] > 0): ?>
 
-                        <!-- TOMBOL NONAKTIF -->
-                        <button
-                            class="px-6 py-3 bg-gray-400 text-white rounded-xl font-semibold cursor-not-allowed opacity-70"
-                            title="Stok masih tersedia, tidak bisa dihapus">
-                            🗑️ Hapus
-                        </button>
+                    <a href="#"
+                    onclick="alert('Produk tidak bisa dihapus karena stok masih tersedia'); return false;"
+                    class="px-6 py-3 bg-gray-400 hover:bg-gray-500 text-white rounded-xl font-semibold transition">
+                    🗑️ Hapus
+                    </a>
 
                     <?php else: ?>
 
-                        <!-- TOMBOL AKTIF -->
-                        <a href="hapus_produk.php?id=<?= $produk['id'] ?>"
-                        onclick="return confirm('Yakin ingin menghapus produk ini?')"
-                        class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition">
-                        🗑️ Hapus
-                        </a>
+                    <a href="hapus_produk.php?id=<?= $produk['id'] ?>"
+                    onclick="return confirm('Yakin ingin menghapus produk ini?')"
+                    class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold transition">
+                    🗑️ Hapus
+                    </a>
 
                     <?php endif; ?>
                 </div>

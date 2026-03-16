@@ -11,7 +11,14 @@ if (isset($_POST['simpan'])) {
     } else {
 
         /* CEK DUPLIKAT */
-        $cek = mysqli_query($conn, "SELECT id FROM kategori WHERE nama_kategori='$nama'");
+        $user_id = $_SESSION['user_id'];
+
+        $cek = mysqli_query($conn, "
+            SELECT id 
+            FROM kategori 
+            WHERE nama_kategori='$nama' 
+            AND penjual_id='$user_id'
+        ");
         if (mysqli_num_rows($cek) > 0) {
             echo "<script>alert('Kategori sudah ada');</script>";
         } else {
@@ -55,26 +62,31 @@ if (isset($_POST['simpan'])) {
 
 /* ================= SEARCH ================= */
 $search = $_GET['search'] ?? '';
-
 $user_id = $_SESSION['user_id'];
+
 if ($search != '') {
+
     $kategori = mysqli_query($conn, "
         SELECT * FROM kategori
         WHERE (penjual_id = $user_id OR penjual_id IS NULL)
         AND nama_kategori LIKE '%$search%'
         ORDER BY id DESC
     ");
+
 } else {
+
     $kategori = mysqli_query($conn, "
         SELECT * FROM kategori
         WHERE penjual_id = $user_id OR penjual_id IS NULL
         ORDER BY id DESC
     ");
+
 }
 
 if (!$kategori) {
     die("Query error: " . mysqli_error($conn));
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -181,21 +193,31 @@ if (!$kategori) {
         if(mysqli_num_rows($cek_produk) > 0){
             $kategori_dipakai = true;
         }
+        ?>
 
-        if ($row['penjual_id'] === null || $kategori_dipakai): ?>
-            <!-- Tombol disabled -->
-            <button class="p-2 rounded-full bg-yellow-300 text-gray-500 cursor-not-allowed" disabled>✏️</button>
-            <button class="p-2 rounded-full bg-red-300 text-gray-500 cursor-not-allowed" disabled>🗑️</button>
-        <?php else: ?>
-            <!-- Tombol aktif -->
-            <a href="edit_kategori.php?id=<?= $row['id']; ?>"
-               class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
+<a href="edit_kategori.php?id=<?= $row['id']; ?>"
+onclick="<?php
+    if ($row['penjual_id'] === null) {
+        echo "alert('Kategori sistem tidak bisa diedit'); return false;";
+    }
+    if ($kategori_dipakai) {
+        echo "alert('Kategori sedang dipakai produk'); return false;";
+    }
+    ?>"
+    class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
 
-            <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
-               onclick="return confirm('Yakin hapus kategori ini?')"
-               class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
-        <?php endif; ?>
-    </div>
+    <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
+    onclick="<?php
+        if ($row['penjual_id'] === null) {
+            echo "alert('Kategori sistem tidak bisa dihapus'); return false;";
+        }
+        if ($kategori_dipakai) {
+            echo "alert('Kategori sedang dipakai produk'); return false;";
+        }
+        echo "return confirm('Yakin hapus kategori ini?')";
+    ?>"
+    class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
+        </div>
 </td>
 </tr>
 <?php endwhile; ?>

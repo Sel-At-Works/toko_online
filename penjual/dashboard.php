@@ -275,12 +275,12 @@ $queryProduk = mysqli_query($conn, "
 
         <!-- MESSAGE -->
         <div class="bg-teal-500 text-white rounded-2xl p-6">
-          <p class="font-semibold mb-2">Message</p>
+          <p class="font-semibold mb-2">Warning!!</p>
           <p class="text-sm">
-            Saya sudah memesan buku php,<br>
-            ditunggu ya TL nya 🙏
+            Selamat Berjualan<br>
+            lakukan Dengan Senang Hati 🙏
           </p>
-          <p class="text-xs mt-2 opacity-80">Husni · 1 Minute Ago</p>
+          <p class="text-xs mt-2 opacity-80">bookstore</p>
         </div>
 
       </aside>
