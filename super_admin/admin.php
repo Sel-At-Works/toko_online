@@ -114,11 +114,18 @@ $query = mysqli_query($conn, "
                             <div class="w-20 h-20 rounded-full border-4 border-white shadow
                                     flex items-center justify-center bg-white/20 overflow-hidden">
 
-                                <?php if ($ada_foto): ?>
-                                    <img src="<?= $path_url ?>" class="w-full h-full object-cover">
-                                <?php else: ?>
-                                    <span class="text-sm">No Photo</span>
-                                <?php endif; ?>
+                            <?php if ($ada_foto): ?>
+                                <img src="<?= $path_url ?>" class="w-full h-full object-cover">
+                            <?php else: ?>
+                                <?php
+                                    // ambil inisial (huruf depan dari nama)
+                                    $nama = trim($row['nama']);
+                                    $inisial = strtoupper(substr($nama, 0, 1));
+                                ?>
+                                <span class="text-2xl font-bold text-white">
+                                    <?= $inisial ?>
+                                </span>
+                            <?php endif; ?>
 
                             </div>
                         </div>
