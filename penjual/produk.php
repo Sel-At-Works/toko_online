@@ -14,6 +14,8 @@ $penjual_id = $_SESSION['user_id'];
 // ================== AMBIL KATEGORI ==================
 $kategori = mysqli_query($conn, "
     SELECT * FROM kategori 
+    WHERE penjual_id = $penjual_id 
+       OR penjual_id IS NULL
     ORDER BY nama_kategori ASC
 ");
 
