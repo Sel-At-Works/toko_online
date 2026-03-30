@@ -204,14 +204,14 @@ $total_notif = $notif_chat + $notif_pesanan;
       </p>
     </div>
 
-<?php if ($foto): ?>
+<?php if (!empty($foto) && file_exists($_SERVER['DOCUMENT_ROOT'].'/'.$foto)) { ?>
 
     <!-- FOTO ASLI -->
     <img src="/<?= htmlspecialchars($foto) ?>"
          class="w-10 h-10 rounded-full object-cover border"
          alt="Profile">
 
-<?php else: ?>
+<?php } else { ?>
 
     <!-- AVATAR INISIAL -->
     <div class="w-10 h-10 rounded-full border
@@ -221,8 +221,7 @@ $total_notif = $notif_chat + $notif_pesanan;
         <?= $inisial ?>
     </div>
 
-<?php endif; ?>
-
+<?php } ?>
   </a>
 </div>
 <script>

@@ -11,7 +11,12 @@ if (isset($_POST['simpan'])) {
     } else {
 
         /* CEK DUPLIKAT */
-        $cek = mysqli_query($conn, "SELECT id FROM kategori WHERE nama_kategori='$nama'");
+        $user_id = $_SESSION['user_id'];
+        $cek = mysqli_query($conn, "
+            SELECT id FROM kategori 
+            WHERE nama_kategori='$nama' 
+            AND (penjual_id = $user_id OR penjual_id IS NULL)
+        ");
         if (mysqli_num_rows($cek) > 0) {
             echo "<script>alert('Kategori sudah ada');</script>";
         } else {

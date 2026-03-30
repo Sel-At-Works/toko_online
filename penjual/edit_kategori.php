@@ -35,9 +35,13 @@ if (isset($_POST['update'])) {
     } else {
 
         /* CEK DUPLIKAT */
+        $user_id = $_SESSION['user_id'];
+
         $cek = mysqli_query($conn, "
             SELECT id FROM kategori 
-            WHERE nama_kategori='$nama' AND id != '$id'
+            WHERE nama_kategori='$nama' 
+            AND penjual_id = $user_id
+            AND id != '$id'
         ");
 
         if (mysqli_num_rows($cek) > 0) {

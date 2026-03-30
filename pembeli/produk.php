@@ -10,7 +10,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user']['role'] !== 'pembeli') {
 
 // ================== AMBIL KATEGORI ==================
 $kategori = mysqli_query($conn, "
-    SELECT * FROM kategori
+    SELECT MIN(id) as id, LOWER(nama_kategori) as nama_kategori
+    FROM kategori
+    GROUP BY LOWER(nama_kategori)
     ORDER BY nama_kategori ASC
 ");
 
@@ -29,7 +31,17 @@ if (!empty($search)) {
 
 // ================== KATEGORI YANG DIPILIH ==================
 $kategori_id = $_GET['kategori_id'] ?? '';
-$where_kategori = $kategori_id ? "AND p.kategori_id = $kategori_id" : "";
+$where_kategori = '';
+
+if ($kategori_id) {
+    $getNama = mysqli_fetch_assoc(mysqli_query($conn, "
+        SELECT nama_kategori FROM kategori WHERE id='$kategori_id'
+    "));
+
+    $namaKategori = strtolower($getNama['nama_kategori']);
+
+    $where_kategori = "AND LOWER(k.nama_kategori) = '$namaKategori'";
+}
 
 
 // ================== AMBIL PRODUK (KHUSUS PEMBELI) ==================
