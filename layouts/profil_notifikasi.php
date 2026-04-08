@@ -112,7 +112,7 @@ $total_notif = $notif_chat + $notif_pesanan;
 
       <div class="p-4 font-semibold border-b">Notifikasi</div>
 
-      <div class="max-h-60 overflow-y-auto">
+      <div id="notifContent" class="max-h-60 overflow-y-auto">
 
         <?php if ($role === 'pembeli') { ?>
 
@@ -275,6 +275,12 @@ $total_notif = $notif_chat + $notif_pesanan;
           pesananBadge.innerText = data.pesanan;
           pesananBadge.style.display = data.pesanan > 0 ? 'inline-block' : 'none';
         }
+
+        // 🔥 INI YANG PENTING (TAMBAHKAN DI SINI)
+      const notifContent = document.getElementById('notifContent');
+      if (notifContent && data.html) {
+        notifContent.innerHTML = data.html;
+      }
       });
   }
 

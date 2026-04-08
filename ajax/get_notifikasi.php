@@ -46,13 +46,31 @@ if ($role === 'pembeli') {
     SELECT COUNT(*) total
     FROM transaksi_penjual
     WHERE penjual_id = '$user_id'
+    AND notif_dibaca_penjual = 0
     AND status IN ('MENUNGGU','MENUNGGU_VERIFIKASI')
   ");
   $notif_pesanan = mysqli_fetch_assoc($q)['total'];
 }
 
+$html = '';
+
+if ($role === 'penjual') {
+  $html .= '
+    <a href="/chat_app.php" class="block p-4 text-sm hover:bg-gray-50 flex justify-between">
+      <span>💬 Pesan baru dari pembeli</span>
+      '.($notif_chat > 0 ? "<span class=\"bg-teal-500 text-white px-2 rounded-full text-xs\">$notif_chat</span>" : "").'
+    </a>
+
+    <a href="/pesanan/pesan_penjual.php" class="block p-4 text-sm hover:bg-gray-50 flex justify-between">
+      <span>📦 Pesanan baru masuk</span>
+      '.($notif_pesanan > 0 ? "<span class=\"bg-orange-500 text-white px-2 rounded-full text-xs\">$notif_pesanan</span>" : "").'
+    </a>
+  ';
+}
+
 echo json_encode([
-  'chat'     => (int)$notif_chat,
+  'chat' => (int)$notif_chat,
   'pesanan' => (int)$notif_pesanan,
-  'total'   => (int)($notif_chat + $notif_pesanan)
+  'total' => (int)($notif_chat + $notif_pesanan),
+  'html' => $html
 ]);
