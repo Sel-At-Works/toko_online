@@ -283,7 +283,12 @@ if ($aksi === 'approve') {
         ");
         ?>
 
-        <tr class="border-t">
+        <tr class="border-t"
+        id="row-<?= $row['tp_id'] ?>"
+        data-status="<?= $row['status'] ?>"
+        data-approve="<?= $row['approve'] ?>"
+        data-resi="<?= $row['resi'] ?>">
+
         <td class="px-4 py-2">
             <?php 
             $kode_invoice = 'INV-' . date('Ymd', strtotime($row['created_at'])) . '-' . $row['transaksi_id'];
@@ -328,7 +333,7 @@ if ($aksi === 'approve') {
 
 
         <!-- tombol approve 1 menit -->
-<td class="px-4 py-2 text-center">
+        <td class="px-4 py-2 text-center approve-text">
 
 <?php if ($row['status'] === 'refund'): ?>
 
@@ -400,8 +405,8 @@ if ($aksi === 'approve') {
 <?php endif; ?>
 </td>
 
-         <td class="px-4 py-2 text-center">
-        <?php if($row['status'] === 'refund'): ?>
+            <td class="px-4 py-2 text-center status-text">
+            <?php if($row['status'] === 'refund'): ?>
             <div class="text-xs text-red-600 font-semibold">
                 REFUND
             </div>
@@ -424,7 +429,7 @@ if ($aksi === 'approve') {
         <?php endif; ?>
         </td>
 
-        <td class="px-4 py-2 text-center">
+        <td class="px-4 py-2 text-center resi-text">
         <?php if ($row['approve'] === 'setuju' && empty($row['resi'])): ?>
         <form method="post" class="flex flex-col gap-1 items-center justify-center">
             <input type="hidden" name="tp_id" value="<?= $row['tp_id'] ?>">
@@ -542,5 +547,167 @@ if ($aksi === 'approve') {
 
         document.addEventListener('DOMContentLoaded', initRefundTimer);
         </script>
+
+        <!-- 🔥 REALTIME UPDATE -->
+        <script>
+
+        function updateStatusRealtime() {
+
+            // 🔥 GLOBAL PROTECTION (SEMUA INPUT)
+            if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                return;
+            }
+
+            fetch('cek_status.php')
+            .then(res => res.json())
+            .then(data => {
+
+                Object.keys(data).forEach(id => {
+                    const row = document.getElementById('row-' + id);
+                    if (!row) return;
+
+                    // 🔥 PER ROW PROTECTION
+                    if (row.querySelector('input:focus')) {
+                        return;
+                    }
+
+                    const item = data[id];
+
+                    const oldStatus  = row.dataset.status;
+                    const oldApprove = row.dataset.approve;
+                    const oldResi    = row.dataset.resi;
+
+                    if (
+                        oldStatus !== item.status ||
+                        oldApprove !== item.approve ||
+                        oldResi !== item.resi
+                    ) {
+
+                        row.dataset.status  = item.status;
+                        row.dataset.approve = item.approve;
+                        row.dataset.resi    = item.resi;
+
+                        const statusCell  = row.querySelector('.status-text');
+                        const approveCell = row.querySelector('.approve-text');
+                        const resiCell    = row.querySelector('.resi-text');
+
+                        row.style.transition = "0.3s";
+                        row.style.backgroundColor = "#fef9c3";
+
+                        setTimeout(() => {
+                            row.style.backgroundColor = "";
+                        }, 500);
+
+                        if (statusCell) {
+
+                            let warna = {
+                                'menunggu_verifikasi': {bg:'#fef3c7', text:'#92400e'},
+                                'diproses':            {bg:'#e0f2fe', text:'#075985'},
+                                'dikirim':             {bg:'#dcfce7', text:'#166534'},
+                                'selesai':             {bg:'#ede9fe', text:'#5b21b6'},
+                                'refund':              {bg:'#fee2e2', text:'#991b1b'}
+                            };
+
+                            let s = warna[item.status] || {bg:'#e5e7eb', text:'#374151'};
+
+                            if(item.status === 'refund'){
+                                statusCell.innerHTML = `
+                                    <div class="text-xs text-red-600 font-semibold">
+                                        REFUND
+                                    </div>
+                                `;
+                            } else {
+                                statusCell.innerHTML = `
+                                    <span style="
+                                        background: ${s.bg};
+                                        color: ${s.text};
+                                        padding: 4px 10px;
+                                        border-radius: 999px;
+                                        font-size: 12px;
+                                        font-weight: 600;
+                                    ">
+                                        ${item.status.replace('_',' ').toUpperCase()}
+                                    </span>
+                                `;
+                            }
+                        }
+
+                        if (approveCell) {
+
+                            // 🔥 CEK: kalau tidak berubah, skip
+                            if (item.approve === oldApprove) return;
+                            
+                            if(item.approve === 'menunggu'){
+                                approveCell.innerHTML = `
+                                    <span class="text-yellow-600 font-semibold">Menunggu</span>
+                                `;
+                            }else if(item.approve === 'setuju'){
+                                approveCell.innerHTML = `
+                                    <span class="text-green-600 font-semibold">Setuju</span>
+                                `;
+                            } else if(item.approve === 'ditolak'){
+                                approveCell.innerHTML = `
+                                    <span class="text-red-600 font-semibold">Ditolak</span>
+                                `;
+                            }
+                        }
+
+                        if (resiCell) {
+
+                            // kalau lagi ngetik → skip row ini saja
+                            if (document.activeElement && resiCell.contains(document.activeElement)) {
+                                return; // ❗ ini masih boleh karena dalam forEach (skip item)
+                            }
+
+                            // 🔥 kalau data sama → skip update
+                            if (item.resi === oldResi && oldApprove === item.approve) {
+                                return;
+                            }
+
+                            if(item.resi){
+                                resiCell.innerHTML = `
+                                    <span class="text-green-600 font-semibold">
+                                        ${item.resi}
+                                    </span>
+                                `;
+                            }
+                            else if(item.approve === 'setuju'){
+                                resiCell.innerHTML = `
+                                    <form method="post" class="flex flex-col gap-1 items-center justify-center">
+                                        <input type="hidden" name="tp_id" value="${id}">
+                                        <input type="hidden" name="transaksi_id" value="${item.transaksi_id}">
+
+                                        <input type="text" 
+                                            name="resi" 
+                                            required 
+                                            placeholder="No Resi"
+                                            class="border px-2 py-1 text-xs rounded w-36">
+
+                                        <input type="url" 
+                                            name="link_lacak" 
+                                            placeholder="Link Lacak Paket"
+                                            class="border px-2 py-1 text-xs rounded w-36">
+
+                                        <button name="aksi" value="resi" 
+                                            class="bg-blue-500 text-white text-xs px-2 py-1 rounded w-36">
+                                            Simpan
+                                        </button>
+                                    </form>
+                                `;
+                            }
+                            else {
+                                resiCell.innerHTML = '-';
+                            }
+                        }
+                    }
+                });
+
+            })
+            .catch(err => console.log(err));
+        }
+
+        setInterval(updateStatusRealtime, 5000);
+        </script>
+
         </body>
         </html>
