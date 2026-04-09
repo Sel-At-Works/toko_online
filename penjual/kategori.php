@@ -88,6 +88,7 @@ if (!$kategori) {
     <meta charset="UTF-8">
     <title>Kategori</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -179,27 +180,61 @@ if (!$kategori) {
 
 <td class="py-3">
     <div class="flex justify-center gap-4">
-        <?php 
-        // Cek apakah kategori sedang dipakai di produk
-        $kategori_dipakai = false;
-        $cek_produk = mysqli_query($conn, "SELECT id FROM produk WHERE kategori_id = ".$row['id']." LIMIT 1");
-        if(mysqli_num_rows($cek_produk) > 0){
-            $kategori_dipakai = true;
-        }
+    <?php 
+    // Cek apakah kategori sedang dipakai di produk
+    $kategori_dipakai = false;
+    $cek_produk = mysqli_query($conn, "SELECT id FROM produk WHERE kategori_id = ".$row['id']." LIMIT 1");
+    if(mysqli_num_rows($cek_produk) > 0){
+        $kategori_dipakai = true;
+    }
+    ?>
 
-        if ($row['penjual_id'] === null || $kategori_dipakai): ?>
-            <!-- Tombol disabled -->
-            <button class="p-2 rounded-full bg-yellow-300 text-gray-500 cursor-not-allowed" disabled>✏️</button>
-            <button class="p-2 rounded-full bg-red-300 text-gray-500 cursor-not-allowed" disabled>🗑️</button>
-        <?php else: ?>
-            <!-- Tombol aktif -->
-            <a href="edit_kategori.php?id=<?= $row['id']; ?>"
-               class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
+    <?php if ($row['penjual_id'] === null): ?>
 
-            <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
-               onclick="return confirm('Yakin hapus kategori ini?')"
-               class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
-        <?php endif; ?>
+    <!-- Kategori global -->
+    <button onclick="Swal.fire({
+        icon: 'info',
+        title: 'Tidak bisa diedit',
+        text: 'Kategori ini adalah kategori default sistem'
+    })"
+    class="p-2 rounded-full bg-yellow-300 hover:bg-yellow-400">✏️</button>
+
+    <button onclick="Swal.fire({
+        icon: 'info',
+        title: 'Tidak bisa dihapus',
+        text: 'Kategori ini adalah kategori default sistem'
+    })"
+    class="p-2 rounded-full bg-red-300 hover:bg-red-400">🗑️</button>
+
+<?php elseif ($kategori_dipakai): ?>
+
+    <!-- Sedang dipakai produk -->
+    <button onclick="Swal.fire({
+        icon: 'warning',
+        title: 'Tidak bisa diedit',
+        text: 'Kategori sedang digunakan oleh produk'
+    })"
+    class="p-2 rounded-full bg-yellow-300 hover:bg-yellow-400">✏️</button>
+
+    <button onclick="Swal.fire({
+        icon: 'warning',
+        title: 'Tidak bisa dihapus',
+        text: 'Kategori sedang digunakan oleh produk'
+    })"
+    class="p-2 rounded-full bg-red-300 hover:bg-red-400">🗑️</button>
+
+<?php else: ?>
+
+    <!-- Normal -->
+    <a href="edit_kategori.php?id=<?= $row['id']; ?>"
+       class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
+
+    <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
+       onclick="return confirm('Yakin hapus kategori ini?')"
+       class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
+
+<?php endif; ?>
+
     </div>
 </td>
 </tr>

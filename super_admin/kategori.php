@@ -82,6 +82,7 @@ if (!$kategori) {
   <meta charset="UTF-8">
   <title>Kategori</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-gray-100 font-sans">
@@ -181,17 +182,32 @@ if (!$kategori) {
         $kategori_dipakai = mysqli_num_rows($cek_produk) > 0;
 
         if ($kategori_dipakai): ?>
-            <!-- Tombol disabled karena kategori sudah dipakai -->
-            <button class="p-2 rounded-full bg-yellow-300 text-gray-500 cursor-not-allowed" disabled>✏️</button>
-            <button class="p-2 rounded-full bg-red-300 text-gray-500 cursor-not-allowed" disabled>🗑️</button>
-        <?php else: ?>
-            <!-- Tombol aktif karena kategori belum dipakai -->
-            <a href="edit_kategori.php?id=<?= $row['id']; ?>"
-               class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
 
-            <a href="hapus_kategori.php?id=<?= $row['id']; ?>"
-               onclick="return confirm('Yakin ingin menghapus kategori ini?')"
-               class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
+            <!-- Kategori dipakai -->
+            <button onclick="Swal.fire({
+                icon: 'warning',
+                title: 'Tidak bisa diedit',
+                text: 'Kategori sedang digunakan oleh produk'
+            })"
+            class="p-2 rounded-full bg-yellow-300 hover:bg-yellow-400">✏️</button>
+
+            <button onclick="Swal.fire({
+                icon: 'warning',
+                title: 'Tidak bisa dihapus',
+                text: 'Kategori sedang digunakan oleh produk'
+            })"
+            class="p-2 rounded-full bg-red-300 hover:bg-red-400">🗑️</button>
+
+        <?php else: ?>
+
+            <!-- Normal -->
+            <a href="edit_kategori.php?id=<?= $row['id']; ?>"
+            class="p-2 rounded-full bg-yellow-400 hover:bg-yellow-500">✏️</a>
+
+            <a href="#"
+            onclick="confirmHapus(<?= $row['id']; ?>)"
+            class="p-2 rounded-full bg-red-500 hover:bg-red-600">🗑️</a>
+
         <?php endif; ?>
     </div>
 </td>
@@ -215,6 +231,25 @@ if (!$kategori) {
 
 </main>
 </div>
+
+<script>
+function confirmHapus(id) {
+    Swal.fire({
+        title: 'Yakin?',
+        text: "Data kategori akan dihapus!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location = 'hapus_kategori.php?id=' + id;
+        }
+    });
+}
+</script>
 
 </body>
 </html>
