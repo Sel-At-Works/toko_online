@@ -62,6 +62,7 @@ $query = mysqli_query($conn, "
         FROM transaksi_detail td
         JOIN produk p ON td.produk_id = p.id
         WHERE td.transaksi_id = '{$row['transaksi_id']}'
+        AND p.penjual_id = '$penjual_id'
     ");
 ?>
 
